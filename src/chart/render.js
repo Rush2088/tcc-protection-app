@@ -109,8 +109,10 @@ export function render() {
           title: { display: true, text: xLabel, color: '#333', font: { size: 12 } },
           afterBuildTicks: ax => { const mn=zoomState.xMin, mx=zoomState.xMax; ax.ticks = xTicks().filter(t => t.value >= mn*0.95 && t.value <= mx*1.05); },
           ticks: { color: '#444', maxRotation: 0, callback(v) {
-            if (!X_LABEL.has(v)) return '';
-            return xUnit === 'A' ? (v >= 1000 ? (v/1000)+'k' : String(v)) : fmtKA(v);
+            let matched = null;
+            for (const lv of X_LABEL) { if (Math.abs(v/lv-1)<0.01) { matched=lv; break; } }
+            if (!matched) return '';
+            return xUnit === 'A' ? (matched >= 1000 ? (matched/1000)+'k' : String(matched)) : fmtKA(matched);
           }},
           grid: { display: false }
         },
@@ -118,7 +120,7 @@ export function render() {
           type: 'logarithmic', min: zoomState.yMin, max: zoomState.yMax,
           title: { display: true, text: 'Trip time (s)', color: '#333', font: { size: 12 } },
           afterBuildTicks: ax => { const mn=zoomState.yMin, mx=zoomState.yMax; ax.ticks = yTicks().filter(t => t.value >= mn*0.9 && t.value <= mx*1.1); },
-          ticks: { color: '#444', callback(v) { const r = +v.toPrecision(4); return Y_LABEL.has(r) ? String(r) : ''; } },
+          ticks: { color: '#444', callback(v) { for (const lv of Y_LABEL) { if (Math.abs(v/lv-1)<0.01) return String(lv); } return ''; } },
           grid: { display: false }
         }
       }
