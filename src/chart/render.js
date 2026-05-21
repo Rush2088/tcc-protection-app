@@ -2,6 +2,9 @@ import { build }                                     from '../engine/dataset.js'
 import { xTicks, yTicks, X_LABEL, Y_LABEL, fmtKA }  from './ticks.js';
 import { getRelays, getBaseV, getShowFull, getXUnit } from '../ui/inputs.js';
 import { getCustomDevices }                          from '../ui/custom-device.js';
+import { faultLevels }                               from '../state.js';
+
+const FL_COLORS = ['#6c3d91','#2e7d32','#00838f','#f57c00','#37474f','#ad1457'];
 
 let myChart = null;
 
@@ -86,9 +89,46 @@ export function render() {
     if (lineEl) lineEl.setAttribute('stroke', cd.color);
   });
 
+  // ── Fault level vertical lines (as datasets — avoids plugin module-instance issues) ──
+  if (window.flParentEn !== false) {
+    faultLevels.forEach((fl, idx) => {
+      if (fl.en === false || !fl.a) return;
+      const col = FL_COLORS[idx % FL_COLORS.length];
+      datasets.push({
+        data: [{ x: fl.a, y: zoomState.yMin * 0.5 }, { x: fl.a, y: zoomState.yMax * 2 }],
+        borderColor: col, borderWidth: 1.5, borderDash: [6, 3],
+        pointRadius: 0, showLine: true, tension: 0
+      });
+    });
+  }
+
+  // Local plugin: draw FL labels at top of each vertical line
+  const flLabelPlugin = {
+    id: 'flLabel',
+    afterDraw(ch) {
+      if (window.flParentEn === false) return;
+      const { ctx, scales: { x, y } } = ch;
+      if (!x || !y) return;
+      ctx.save();
+      faultLevels.forEach((fl, i) => {
+        if (fl.en === false || !fl.a) return;
+        if (fl.a < x.min * 0.99 || fl.a > x.max * 1.01) return;
+        const px  = x.getPixelForValue(fl.a);
+        const col = FL_COLORS[i % FL_COLORS.length];
+        const kA  = (fl.a / 1000).toFixed(fl.a < 100 ? 2 : fl.a < 1000 ? 1 : 0);
+        ctx.fillStyle = col;
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText((fl.label || ('FL' + (i + 1))) + '  ' + kA + ' kA', px + 5, y.top + 16);
+      });
+      ctx.restore();
+    }
+  };
+
   if (myChart) { myChart.destroy(); myChart = null; }
   myChart = new Chart(document.getElementById('tcc'), {
     type: 'scatter',
+    plugins: [flLabelPlugin],
     data: { datasets },
     options: {
       responsive: true, maintainAspectRatio: false, animation: { duration: 120 },

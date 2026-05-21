@@ -47,32 +47,3 @@ Chart.register({
   }
 });
 
-// ── fl: fault level vertical dashed lines ─────────────────────────────────────
-Chart.register({
-  id: 'fl',
-  afterDraw(ch) {
-    if (!faultLevels.length) return;
-    if (window.flParentEn === false) return;
-    const { ctx, scales: { x, y } } = ch;
-    if (!x || !y) return;
-    ctx.save();
-    faultLevels.forEach((fl, i) => {
-      if (fl.en === false) return;           // skip disabled
-      const xA = fl.a;                       // fl.a is already in Amps
-      if (!xA || xA < x.min * 0.99 || xA > x.max * 1.01) return;
-      const px  = x.getPixelForValue(xA);
-      const col = FL_COLORS[i % FL_COLORS.length];
-      ctx.strokeStyle = col;
-      ctx.lineWidth   = 1.5;
-      ctx.setLineDash([6, 3]);
-      ctx.beginPath(); ctx.moveTo(px, y.top); ctx.lineTo(px, y.bottom); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle  = col;
-      ctx.font       = 'bold 10px Arial';
-      ctx.textAlign  = 'left';
-      const kA = (xA / 1000).toFixed(xA < 100 ? 2 : xA < 1000 ? 1 : 0);
-      ctx.fillText((fl.label || ('FL' + (i + 1))) + '  ' + kA + ' kA', px + 5, y.top + 16);
-    });
-    ctx.restore();
-  }
-});

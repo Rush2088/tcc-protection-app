@@ -66,13 +66,13 @@ export function renderFLList() {
       '<div class="fl-row">' +
         '<input type="checkbox"' + (enabled ? ' checked' : '') +
           ' title="Enable/disable this fault level"' +
-          ' onchange="window.faultLevels[' + i + '].en=this.checked;window.renderFLList();window.render()">' +
+          ' onchange="window.updateFL(' + i + ',' + "'en'" + ',this.checked);window.renderFLList();window.render()">' +
         '<span class="fl-dot" style="background:' + col + '"></span>' +
         '<input class="fl-lbl" type="text" value="' + fl.label + '"' +
-          ' onchange="window.faultLevels[' + i + '].label=this.value;window.render()">' +
+          ' onchange="window.updateFL(' + i + ',' + "'label'" + ',this.value);window.render()">' +
         '<span class="fl-ilbl">A</span>' +
         '<input class="fl-val" type="number" value="' + fl.a + '" step="any" min="1"' +
-          ' onchange="window.faultLevels[' + i + '].a=+this.value;window.render()">' +
+          ' onchange="window.updateFL(' + i + ',' + "'a'" + ',+this.value);window.render()">' +
         '<button class="fl-del" onclick="window.removeFL(' + i + ')">&#x2715;</button>' +
       '</div>' +
       (enabled && allTimes.length ?
