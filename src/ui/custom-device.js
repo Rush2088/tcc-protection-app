@@ -160,6 +160,12 @@ export function cdMoveDown() {
   }
 }
 
+export function cdClearAll() {
+  if (_cdTmpPts.length && !confirm('Clear all ' + _cdTmpPts.length + ' rows?')) return;
+  _cdTmpPts = [];
+  rebuildTable();
+}
+
 export async function cdPasteClipboard() {
   try {
     const text   = await navigator.clipboard.readText();

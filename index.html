@@ -408,6 +408,7 @@
       <button class="cd-tbtn" onclick="window.cdDelRow()" title="Delete selected row">&#10005;</button>
       <button class="cd-tbtn" onclick="window.cdMoveUp()" title="Move row up">&#8679;</button>
       <button class="cd-tbtn" onclick="window.cdMoveDown()" title="Move row down">&#8681;</button>
+      <button class="cd-tbtn cd-btn-clear" onclick="window.cdClearAll()" title="Clear all rows" style="margin-left:8px;color:#c0392b;border-color:#c0392b;">&#128465; Clear All</button>
     </div>
     <div id="cd-tbl-wrap">
       <table id="cd-table">
@@ -431,7 +432,7 @@
   import { exportXLSX }                   from './src/ui/export-excel.js';
   import {
     openCDModal, closeCDModal, saveCDModal,
-    cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard
+    cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard, cdClearAll
   } from './src/ui/custom-device.js';
 
   window.addFL            = addFL;
@@ -447,6 +448,7 @@
   window.cdMoveUp         = cdMoveUp;
   window.cdMoveDown       = cdMoveDown;
   window.cdPasteClipboard = cdPasteClipboard;
+  window.cdClearAll       = cdClearAll;
   window.updateFL         = updateFL;
 
   // Sync dot colour when colour picker changes
