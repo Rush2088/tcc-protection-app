@@ -1,17 +1,16 @@
 import { faultLevels }                       from '../state.js';
 import { FL_COLORS }                          from '../chart/plugins.js';
-import { render }                             from '../chart/render.js';
 import { operateTime }                        from '../engine/dataset.js';
 import { getRelays, getBaseV }                from './inputs.js';
 import { getCustomDevices, cdOperateTime }    from './custom-device.js';
 
 export function addFL() {
   faultLevels.push({ label: 'FL' + (faultLevels.length + 1), a: 1000, en: true });
-  renderFLList(); render();
+  renderFLList(); window.render();
 }
 export function removeFL(i) {
   faultLevels.splice(i, 1);
-  renderFLList(); render();
+  renderFLList(); window.render();
 }
 export function updateFL(i, field, val) {
   if (faultLevels[i]) { faultLevels[i][field] = val; }
