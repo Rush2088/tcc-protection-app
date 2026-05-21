@@ -208,12 +208,12 @@
     <!-- Relay 1 -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleRelay(1)">
-        <span class="chevron" id="chv1">&#9660;</span>
+        <span class="chevron" id="chv1">&#9654;</span>
         <span class="rdot" style="background:#1e6bb8"></span>
         <input class="rname" type="text" id="r1-name" value="Relay 1" onclick="event.stopPropagation()" oninput="render()">
         <input type="checkbox" id="r1-en" checked onclick="event.stopPropagation()" onchange="render()">
       </div>
-      <div class="relay-body" id="rb1">
+      <div class="relay-body collapsed" id="rb1">
         <div class="stg-hdr"><span>Stage 1 - IDMT</span><input type="checkbox" id="r1-s1-en" checked onchange="toggleStage('r1-s1-body',this)"></div>
         <div class="stg-body" id="r1-s1-body">
           <div class="row"><label id="r1-s1-lb">Pickup I (400kV, A)</label><input type="number" id="r1-s1-ip" value="1000" step="1"></div>
@@ -237,12 +237,12 @@
     <!-- Relay 2 -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleRelay(2)">
-        <span class="chevron" id="chv2">&#9660;</span>
+        <span class="chevron" id="chv2">&#9654;</span>
         <span class="rdot" style="background:#c0392b"></span>
         <input class="rname" type="text" id="r2-name" value="Relay 2" onclick="event.stopPropagation()" oninput="render()">
         <input type="checkbox" id="r2-en" onclick="event.stopPropagation()" onchange="render()">
       </div>
-      <div class="relay-body" id="rb2">
+      <div class="relay-body collapsed" id="rb2">
         <div class="stg-hdr"><span>Stage 1 - IDMT</span><input type="checkbox" id="r2-s1-en" checked onchange="toggleStage('r2-s1-body',this)"></div>
         <div class="stg-body" id="r2-s1-body">
           <div class="row"><label id="r2-s1-lb">Pickup I (400kV, A)</label><input type="number" id="r2-s1-ip" value="7" step="0.1"></div>
@@ -265,18 +265,36 @@
 
     <!-- Custom Device -->
     <div class="relay-card">
-      <div class="relay-hdr" onclick="toggleCD()">
-        <span class="chevron" id="cdchv">&#9660;</span>
+      <div class="relay-hdr" onclick="toggleCD(0)">
+        <span class="chevron" id="cdchv0">&#9654;</span>
         <span class="rdot" id="cd0-dot" style="background:#27ae60"></span>
-        <input class="rname" type="text" id="cd0-name" value="Custom Device" onclick="event.stopPropagation()" oninput="render()">
+        <input class="rname" type="text" id="cd0-name" value="Custom 1" onclick="event.stopPropagation()" oninput="render()">
         <input type="checkbox" id="cd0-en" onclick="event.stopPropagation()" onchange="render()">
       </div>
-      <div class="cd-body" id="cdb0">
+      <div class="cd-body collapsed" id="cdb0">
         <div class="cd-row" style="padding:6px 0 4px;">
           <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
           <input type="color" id="cd0-color" value="#27ae60" onchange="window._cdColorChange(0,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
           <button class="cd-edit-btn" onclick="window.openCDModal(0)">&#9998; Edit Points</button>
           <span class="cd-ptcount" id="cd0-ptcount">0 pts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom 2 -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleCD(1)">
+        <span class="chevron" id="cdchv1">&#9654;</span>
+        <span class="rdot" id="cd1-dot" style="background:#e67e22"></span>
+        <input class="rname" type="text" id="cd1-name" value="Custom 2" onclick="event.stopPropagation()" oninput="render()">
+        <input type="checkbox" id="cd1-en" onclick="event.stopPropagation()" onchange="render()">
+      </div>
+      <div class="cd-body collapsed" id="cdb1">
+        <div class="cd-row" style="padding:6px 0 4px;">
+          <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
+          <input type="color" id="cd1-color" value="#e67e22" onchange="window._cdColorChange(1,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
+          <button class="cd-edit-btn" onclick="window.openCDModal(1)">&#9998; Edit Points</button>
+          <span class="cd-ptcount" id="cd1-ptcount">0 pts</span>
         </div>
       </div>
     </div>
@@ -300,8 +318,12 @@
         <span id="leg-r2-name">Relay 2</span>
       </div>
       <div class="leg-item" id="leg-cd0" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#27ae60" stroke-width="2.5" stroke-dasharray="6,3"/></svg>
-        <span id="leg-cd0-name">Custom Device</span>
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#27ae60" stroke-width="2.5"/></svg>
+        <span id="leg-cd0-name">Custom 1</span>
+      </div>
+      <div class="leg-item" id="leg-cd1" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e67e22" stroke-width="2.5"/></svg>
+        <span id="leg-cd1-name">Custom 2</span>
       </div>
       <label class="leg-check">
         <input type="checkbox" id="showFull" onchange="render()"> Full curves
@@ -401,16 +423,16 @@
 </div>
 
 <script type="module">
-  import './src/chart/plugins.js?v=5';
-  import { render, zoomState, resetZoom } from './src/chart/render.js?v=5';
-  import { addFL, removeFL, renderFLList } from './src/ui/fault-levels.js?v=5';
-  import { faultLevels }                   from './src/state.js?v=5';
-  import { exportPNG }                     from './src/ui/export.js?v=5';
-  import { exportXLSX }                   from './src/ui/export-excel.js?v=5';
+  import './src/chart/plugins.js?v=6';
+  import { render, zoomState, resetZoom } from './src/chart/render.js?v=6';
+  import { addFL, removeFL, renderFLList } from './src/ui/fault-levels.js?v=6';
+  import { faultLevels }                   from './src/state.js?v=6';
+  import { exportPNG }                     from './src/ui/export.js?v=6';
+  import { exportXLSX }                   from './src/ui/export-excel.js?v=6';
   import {
     openCDModal, closeCDModal, saveCDModal,
     cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard
-  } from './src/ui/custom-device.js?v=5';
+  } from './src/ui/custom-device.js?v=6';
 
   window.addFL            = addFL;
   window.removeFL         = removeFL;
@@ -444,9 +466,10 @@
     chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   };
 
-  window.toggleCD = function() {
-    const body = document.getElementById('cdb0');
-    const chv  = document.getElementById('cdchv');
+  window.toggleCD = function(n) {
+    const body = document.getElementById('cdb' + n);
+    const chv  = document.getElementById('cdchv' + n);
+    if (!body || !chv) return;
     body.classList.toggle('collapsed');
     chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   };
