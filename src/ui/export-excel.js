@@ -12,7 +12,7 @@ import { iecT }           from '../engine/curves.js';
 import { findCrossAny }   from '../engine/math.js';
 import { getRelays }      from './inputs.js';
 import { faultLevels }    from '../state.js';
-import { getCustomDevices, cdOperateTime, splitBand } from './custom-device.js';
+import { getCustomDevices, cdOperateTime } from './custom-device.js';
 import { operateTime }    from '../engine/dataset.js';
 
 const X_MAX   = 50000;
@@ -115,13 +115,10 @@ function relayEffectivePts(relay) {
 }
 
 function cdEffectivePts(points) {
-  const band = splitBand(points);
-  const src  = band.isBand ? band.upper : band.curve;
-  if (src.length < 2) return [];
-  const xyPts = src.map(p => ({ x: p.i, y: p.t })).sort((a, b) => a.x - b.x);
-  return rdpReduce(xyPts, MAX_PTS).map(p => ({
-    x: +p.x.toPrecision(5), y: +p.y.toPrecision(4)
-  }));
+  // Export all user-entered points exactly as entered — no RDP reduction
+  return points
+    .filter(p => p.i > 0 && p.t >= 0)
+    .map(p => ({ x: p.i, y: p.t }));
 }
 
 export function exportXLSX() {
