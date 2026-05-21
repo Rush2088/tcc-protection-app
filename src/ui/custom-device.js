@@ -112,7 +112,7 @@ export function closeCDModal() {
 }
 
 export function saveCDModal() {
-  customDevices[_cdEditIdx].points = _cdTmpPts.filter(p => p.i > 0 && p.t > 0);
+  customDevices[_cdEditIdx].points = _cdTmpPts.filter(p => p.i > 0 && p.t >= 0);
   const el = document.getElementById('cd' + _cdEditIdx + '-ptcount');
   if (el) el.textContent = customDevices[_cdEditIdx].points.length + ' pts';
   closeCDModal();
@@ -167,7 +167,7 @@ export async function cdPasteClipboard() {
       // Strip thousand-separator commas (e.g. "3,629.490" → "3629.490")
       const i = parseFloat(cols[0].replace(/,/g, '').trim());
       const t = parseFloat(cols[1].replace(/,/g, '').trim());
-      if (!isNaN(i) && !isNaN(t) && i > 0 && t > 0) parsed.push({ i, t });
+      if (!isNaN(i) && !isNaN(t) && i > 0 && t >= 0) parsed.push({ i, t });
     }
     if (parsed.length) {
       _cdTmpPts = parsed;

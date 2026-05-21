@@ -1,7 +1,7 @@
 import { build }                                     from '../engine/dataset.js';
 import { xTicks, yTicks, X_LABEL, Y_LABEL, fmtKA }  from './ticks.js';
 import { getRelays, getBaseV, getShowFull, getXUnit } from '../ui/inputs.js';
-import { getCustomDevices, splitBand }               from '../ui/custom-device.js';
+import { getCustomDevices }                          from '../ui/custom-device.js';
 
 let myChart = null;
 
@@ -62,47 +62,25 @@ export function render() {
       return;
     }
 
-    const band = splitBand(cd.points);
-
-    if (band.isBand) {
-      // Band data (MCB / fuse polygon): solid lower + solid upper — no dashes
-      const loData = band.lower.map(p => ({ x: p.i, y: p.t }));
-      const hiData = band.upper.map(p => ({ x: p.i, y: p.t }));
-      if (!loData.length && !hiData.length) { if (legEl) legEl.style.display = 'none'; return; }
-      // Lower bound — faded but solid, with visible scatter points
-      if (loData.length) datasets.push({
-        data: loData,
-        borderColor: hexToRgba(cd.color, 0.55),
-        borderWidth: 1.5,
-        pointRadius: 2,
-        pointBackgroundColor: hexToRgba(cd.color, 0.55),
-        showLine: true,
-        tension: 0
-      });
-      // Upper bound — full weight solid, with visible scatter points
-      if (hiData.length) datasets.push({
-        data: hiData,
-        borderColor: cd.color,
-        borderWidth: 2.5,
-        pointRadius: 2,
-        pointBackgroundColor: cd.color,
-        showLine: true,
-        tension: 0
-      });
-    } else {
-      // Single monotonic curve — solid line with scatter points
-      const data = band.curve.map(p => ({ x: p.i, y: p.t }));
-      if (!data.length) { if (legEl) legEl.style.display = 'none'; return; }
-      datasets.push({
-        data,
-        borderColor: cd.color,
-        borderWidth: 2.5,
-        pointRadius: 3,
-        pointBackgroundColor: cd.color,
-        showLine: true,
-        tension: 0
-      });
-    }
+    // Plot all points in entry order as a single solid polyline.
+    // t=0 rows are replaced with null so Chart.js creates a gap at the
+    // log-scale boundary rather than crashing; the polygon perimeter still
+    // traces correctly with the remaining points.
+    const data = cd.points
+      .filter(p => p.i > 0)
+      .map(p => (p.t > 0 ? { x: p.i, y: p.t } : null));
+    const validCount = data.filter(Boolean).length;
+    if (!validCount) { if (legEl) legEl.style.display = 'none'; return; }
+    datasets.push({
+      data,
+      borderColor: cd.color,
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointBackgroundColor: cd.color,
+      showLine: true,
+      spanGaps: false,
+      tension: 0
+    });
 
     if (legEl)  { legEl.style.display = ''; }
     if (nameEl) nameEl.textContent = cd.name;
