@@ -75,8 +75,7 @@ export function render() {
       data,
       borderColor: cd.color,
       borderWidth: 2.5,
-      pointRadius: 3,
-      pointBackgroundColor: cd.color,
+      pointRadius: 0,
       showLine: true,
       spanGaps: false,
       tension: 0
