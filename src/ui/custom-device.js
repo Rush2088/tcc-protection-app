@@ -96,6 +96,11 @@ window._cdSet = function(k, field, val) { if (_cdTmpPts[k]) _cdTmpPts[k][field] 
 
 // ─── Public modal API ─────────────────────────────────────────────────────────
 export function openCDModal(idx) {
+  // Guard: ensure the slot exists (handles stale-cache state.js with fewer entries)
+  while (customDevices.length <= idx) {
+    const n = customDevices.length + 1;
+    customDevices.push({ name: 'Custom ' + n, en: false, color: '#e67e22', points: [] });
+  }
   _cdEditIdx = idx;
   _cdTmpPts  = customDevices[idx].points.map(p => ({ ...p }));
   const titleEl = document.getElementById('cd-modal-title');
