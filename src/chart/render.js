@@ -65,39 +65,38 @@ export function render() {
     const band = splitBand(cd.points);
 
     if (band.isBand) {
-      // Band data (MCB / fuse polygon): plot lower bound lighter + upper bound solid
+      // Band data (MCB / fuse polygon): solid lower + solid upper — no dashes
       const loData = band.lower.map(p => ({ x: p.i, y: p.t }));
       const hiData = band.upper.map(p => ({ x: p.i, y: p.t }));
       if (!loData.length && !hiData.length) { if (legEl) legEl.style.display = 'none'; return; }
-      // Lower bound — faded, thinner
+      // Lower bound — faded but solid, with visible scatter points
       if (loData.length) datasets.push({
         data: loData,
-        borderColor: hexToRgba(cd.color, 0.45),
+        borderColor: hexToRgba(cd.color, 0.55),
         borderWidth: 1.5,
-        borderDash: [5, 4],
-        pointRadius: 0,
+        pointRadius: 2,
+        pointBackgroundColor: hexToRgba(cd.color, 0.55),
         showLine: true,
         tension: 0
       });
-      // Upper bound — full weight
+      // Upper bound — full weight solid, with visible scatter points
       if (hiData.length) datasets.push({
         data: hiData,
         borderColor: cd.color,
         borderWidth: 2.5,
-        borderDash: [8, 4],
-        pointRadius: 0,
+        pointRadius: 2,
+        pointBackgroundColor: cd.color,
         showLine: true,
         tension: 0
       });
     } else {
-      // Single monotonic curve
+      // Single monotonic curve — solid line with scatter points
       const data = band.curve.map(p => ({ x: p.i, y: p.t }));
       if (!data.length) { if (legEl) legEl.style.display = 'none'; return; }
       datasets.push({
         data,
         borderColor: cd.color,
         borderWidth: 2.5,
-        borderDash: [8, 4],
         pointRadius: 3,
         pointBackgroundColor: cd.color,
         showLine: true,
