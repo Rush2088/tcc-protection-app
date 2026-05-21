@@ -1,0 +1,7 @@
+node_modules/
+chart.umd.js
+xlsx.full.min.js
+fix*.js
+main.js
+package*.json
+*.lock

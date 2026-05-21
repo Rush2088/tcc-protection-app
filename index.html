@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protection Coordination - TCC v2</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f2f5; font-family: Arial, sans-serif; font-size: 13px; color: #222; }
+  #header { background: #1a3a5c; color: #fff; padding: 10px 20px; display: flex; align-items: center; justify-content: center; }
+  #header h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+  #main { display: flex; gap: 12px; padding: 12px; height: calc(100vh - 68px); }
+  #sidebar { width: 252px; min-width: 220px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+  .card { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 10px 12px; }
+  .card h4 { font-size: 10px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 0.5px solid #e0e0e0; padding-bottom: 5px; }
+  .row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .row label { font-size: 11px; color: #444; min-width: 90px; line-height: 1.3; }
+  .row input[type=number] { flex: 1; padding: 3px 5px; border: 1px solid #bbb; border-radius: 4px; font-size: 12px; background: #fff; color: #222; min-width: 0; }
+  .row input[type=number]:focus { outline: none; border-color: #1a3a5c; }
+  .row select { flex: 1; padding: 3px 5px; border: 1px solid #bbb; border-radius: 4px; font-size: 12px; background: #fff; color: #222; }
+  .relay-card { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; overflow: hidden; }
+  .relay-hdr  { display: flex; align-items: center; gap: 6px; padding: 8px 10px; cursor: pointer; background: #f7f8fa; border-bottom: 0.5px solid #e0e0e0; user-select: none; }
+  .relay-hdr:hover { background: #edf0f3; }
+  .chevron { font-size: 9px; color: #999; width: 10px; flex-shrink: 0; }
+  .rdot    { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .rname   { flex: 1; border: none; background: transparent; font-size: 12px; font-weight: 600; color: #222; cursor: text; padding: 0; min-width: 0; }
+  .rname:focus { outline: 1px solid #ccc; border-radius: 3px; padding: 0 2px; }
+  .relay-body { padding: 4px 10px 8px; }
+  .relay-body.collapsed { display: none; }
+  .stg-hdr { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 2px; margin-top: 5px; border-top: 0.5px solid #ebebeb; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.4px; }
+  .stg-hdr:first-of-type { border-top: none; margin-top: 2px; }
+  .stg-body { padding-top: 3px; }
+  .stg-body.hidden { display: none; }
+  #chart-area { flex: 1; background: #fff; border-radius: 8px; border: 0.5px solid #ccc; display: flex; flex-direction: column; padding: 12px; min-width: 0; }
+  .legend { display: flex; gap: 14px; margin-bottom: 8px; font-size: 12px; flex-wrap: wrap; color: #333; align-items: center; justify-content: center; }
+  .leg-item  { display: flex; align-items: center; gap: 5px; }
+  .leg-check { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; color: #888; }
+  #chartWrap { position: relative; flex: 1; min-height: 0; }
+  #chartWrap canvas { display: block; }
+  #exportBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  #exportBtn:hover { background: #274f7a; }
+  .fl-row { display: flex; align-items: center; gap: 4px; width: 100%; }
+  .fl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .fl-lbl { font-size: 11px; padding: 2px 4px; border: 1px solid #bbb; border-radius: 4px; flex: 1; min-width: 0; }
+  .fl-val { font-size: 11px; padding: 2px 5px; border: 1px solid #bbb; border-radius: 4px; flex: 1; min-width: 0; -moz-appearance: textfield; }
+  .fl-val::-webkit-inner-spin-button, .fl-val::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .fl-op  { font-size: 10px; padding: 2px 3px; border: 1px solid #ddd; border-radius: 4px; width: 52px; background: #fafafa; text-align: right; }
+  .fl-entry { margin-bottom: 6px; }
+  .fl-times { display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; padding-left: 18px; margin-top: 3px; }
+  .fl-t-header { font-size: 9px; font-weight: 700; color: #555; white-space: nowrap; margin-right: 6px; }
+  .fl-t-pair { display: inline-flex; align-items: center; gap: 3px; }
+  .fl-t-lbl { font-size: 9px; font-weight: 600; white-space: nowrap; }
+  .fl-t-val { font-size: 9px; font-weight: 500; white-space: nowrap; background: #fafafa; border: 1px solid #ddd; border-radius: 3px; padding: 1px 4px; }
+  .fl-ilbl { font-size: 10px; color: #888; white-space: nowrap; }
+  .fl-del { padding: 1px 5px; background: #c0392b18; color: #c0392b; border: 1px solid #c0392b55; border-radius: 3px; cursor: pointer; font-size: 11px; }
+  .fl-add { padding: 4px 10px; background: #1a3a5c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; width: 100%; }
+
+  /* Custom Device card */
+  .cd-body { padding: 6px 10px 8px; }
+  .cd-body.collapsed { display: none; }
+  .cd-row { display: flex; align-items: center; gap: 6px; }
+  .cd-edit-btn { flex: 1; padding: 4px 8px; background: #f0f4f8; border: 1px solid #bbb; border-radius: 4px; cursor: pointer; font-size: 12px; text-align: left; }
+  .cd-edit-btn:hover { background: #ddeeff; }
+  .cd-ptcount { font-size: 10px; color: #888; white-space: nowrap; }
+
+  /* Modal */
+  #cd-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.45); z-index: 1000;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+  }
+  .cd-dialog {
+    background: #f5f5f5; border: 1px solid #aaa; border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35); width: 360px; overflow: hidden;
+  }
+  .cd-dlg-hdr {
+    background: #3c5a8a; color: #fff; padding: 8px 12px;
+    font-size: 13px; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cd-dlg-hdr .close { cursor: pointer; font-size: 16px; line-height: 1; opacity: 0.8; }
+  .cd-dlg-hdr .close:hover { opacity: 1; }
+  .cd-toolbar { background: #e8e8e8; padding: 5px 8px; display: flex; gap: 5px; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
+  .cd-tbtn { padding: 4px 9px; border: 1px solid #aaa; border-radius: 3px; background: #fff; cursor: pointer; font-size: 12px; }
+  .cd-tbtn:hover { background: #ddeeff; border-color: #3c5a8a; }
+  #cd-tbl-wrap { height: 280px; overflow-y: auto; background: #fff; }
+  #cd-table { width: 100%; border-collapse: collapse; }
+  #cd-table th { background: #e0e5ee; font-size: 11px; padding: 5px 8px; text-align: left; border-bottom: 1px solid #ccc; position: sticky; top: 0; z-index: 1; }
+  #cd-table td { padding: 2px 4px; border-bottom: 1px solid #f0f0f0; }
+  .cd-inp { width: 100%; padding: 2px 4px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; -moz-appearance: textfield; }
+  .cd-inp::-webkit-inner-spin-button, .cd-inp::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .cd-inp:focus { outline: none; border-color: #3c5a8a; background: #f0f6ff; }
+  .cd-dlg-ftr { padding: 8px 12px; border-top: 1px solid #ccc; display: flex; justify-content: flex-end; gap: 8px; }
+  .cd-btn { padding: 5px 16px; border-radius: 4px; border: 1px solid #aaa; cursor: pointer; font-size: 12px; }
+  .cd-btn-ok { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  .cd-btn-ok:hover { background: #274f7a; }
+
+  /* Export Excel + Help buttons */
+  #exportXlsBtn { padding: 6px 14px; background: #1d6f42; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  #exportXlsBtn:hover { background: #26925a; }
+
+  /* Help modal */
+  #help-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.45); z-index: 2000;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+  }
+  #help-modal.open { display: flex; }
+  .help-dialog {
+    background: #fff; border: 1px solid #aaa; border-radius: 8px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35); width: 480px; overflow: hidden;
+  }
+  .help-dlg-hdr {
+    background: #1a3a5c; color: #fff; padding: 10px 14px;
+    font-size: 13px; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .help-dlg-hdr .close { cursor: pointer; font-size: 16px; opacity: 0.8; }
+  .help-dlg-hdr .close:hover { opacity: 1; }
+  .help-body { padding: 16px 18px; font-size: 12px; color: #222; line-height: 1.6; }
+  .help-body h3 { font-size: 12px; color: #1a3a5c; margin: 12px 0 6px; border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; }
+  .help-body .formula { font-family: monospace; font-size: 13px; background: #f0f4f8; border: 1px solid #cce; border-radius: 4px; padding: 6px 10px; margin: 6px 0; display: block; }
+  .help-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
+  .help-table th { background: #e8edf3; padding: 5px 8px; text-align: center; border: 1px solid #ccc; }
+  .help-table td { padding: 4px 8px; border: 1px solid #e0e0e0; text-align: center; }
+  .help-table tr:nth-child(even) td { background: #f9fafb; }
+
+
+  /* App menu bar */
+  #menubar { background: #f0f0f0; border-bottom: 1px solid #ccc; display: flex; align-items: stretch; padding: 0 4px; user-select: none; position: relative; z-index: 500; }
+  .mb-item { position: relative; }
+  .mb-item > span { display: block; padding: 4px 12px; font-size: 12px; color: #222; cursor: default; line-height: 1.6; }
+  .mb-item > span:hover, .mb-item.open > span { background: #1a3a5c; color: #fff; }
+  .mb-drop { display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #bbb; box-shadow: 2px 4px 12px rgba(0,0,0,0.18); min-width: 180px; z-index: 600; }
+  .mb-item.open .mb-drop { display: block; }
+  .mb-opt { padding: 6px 16px; font-size: 12px; color: #222; cursor: pointer; white-space: nowrap; }
+  .mb-opt:hover { background: #1a3a5c; color: #fff; }
+  .mb-sep { border-top: 1px solid #e0e0e0; margin: 3px 0; }
+  .mb-vsep { width: 1px; height: 16px; background: rgba(255,255,255,0.35); margin: 0 6px; align-self: center; }
+  #menubar { align-items: center; }
+
+
+  /* Zoom toolbar */
+  #zoom-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .zt-btn { padding: 4px 10px; font-size: 11px; border: 1px solid #bbb; border-radius: 4px; background: #f5f5f5; cursor: pointer; white-space: nowrap; }
+  .zt-btn:hover { background: #e0e8f0; border-color: #1a3a5c; }
+  .zt-btn.active { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  #zoom-box { position: absolute; border: 2px solid #1a3a5c; background: rgba(26,58,92,0.08); pointer-events: none; display: none; }
+  #settings-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 2000; align-items: flex-start; justify-content: center; padding-top: 80px; }
+  #settings-modal.open { display: flex; }
+  .stt-dialog { background: #fff; border-radius: 8px; box-shadow: 0 6px 28px rgba(0,0,0,0.3); width: 360px; overflow: hidden; }
+  .stt-hdr { background: #1a3a5c; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .stt-hdr .close { cursor: pointer; font-size: 16px; opacity: 0.8; }
+  .stt-hdr .close:hover { opacity: 1; }
+  .stt-body { padding: 16px 18px; }
+  .stt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .stt-row label { font-size: 12px; color: #444; min-width: 150px; }
+  .stt-row input[type=number], .stt-row select { flex:1; padding: 4px 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 12px; }
+  .stt-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; }
+  .stt-sep { border: none; border-top: 1px solid #e8e8e8; margin: 10px 0; }
+  .stt-ftr { padding: 10px 18px 14px; display: flex; justify-content: flex-end; gap: 8px; }
+  .stt-btn { padding: 6px 18px; border-radius: 4px; border: 1px solid #aaa; cursor: pointer; font-size: 12px; }
+  .stt-btn-ok { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  .stt-btn-ok:hover { background: #274f7a; }
+
+</style>
+</head>
+<body>
+<div id="header"><h1>Protection Coordination - TCC</h1></div>
+<div id="menubar">
+  <div class="mb-item" id="mb-file">
+    <span onclick="window.toggleMenu('file')">File</span>
+    <div class="mb-drop">
+      <div class="mb-opt" onclick="window.exportPNG();window.closeMenus()">Export PNG</div>
+      <div class="mb-opt" onclick="window.exportXLSX();window.closeMenus()">Export Excel</div>
+    </div>
+  </div>
+  <div class="mb-item" id="mb-view">
+    <span onclick="window.toggleMenu('view')">View</span>
+    <div class="mb-drop">
+      <div class="mb-opt" id="mb-fullcurves-opt" onclick="window.toggleFullCurves()">Full Curves: Off</div>
+      <div class="mb-sep"></div>
+      <div class="mb-opt" onclick="window.resetZoomAction();window.closeMenus()">Reset Zoom</div>
+    </div>
+  </div>
+  <div class="mb-item" id="mb-settings">
+    <span onclick="window.toggleMenu('settings')">Settings</span>
+    <div class="mb-drop">
+      <div class="mb-opt" onclick="window.showSettings();window.closeMenus()">Preferences...</div>
+    </div>
+  </div>
+  <div class="mb-item" id="mb-help">
+    <span onclick="window.toggleMenu('help')">Help</span>
+    <div class="mb-drop">
+      <div class="mb-opt" onclick="window.showHelp();window.closeMenus()">IDMT Reference...</div>
+    </div>
+  </div>
+</div>
+<div id="main">
+  <div id="sidebar">
+    <div class="card">
+      <h4>Base Voltage</h4>
+      <div class="row"><label>Base (kV)</label><input type="number" id="baseV" value="400" step="0.001"></div>
+    </div>
+
+    <!-- Relay 1 -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleRelay(1)">
+        <span class="chevron" id="chv1">&#9660;</span>
+        <span class="rdot" style="background:#1e6bb8"></span>
+        <input class="rname" type="text" id="r1-name" value="Relay 1" onclick="event.stopPropagation()" oninput="render()">
+        <input type="checkbox" id="r1-en" checked onclick="event.stopPropagation()" onchange="render()">
+      </div>
+      <div class="relay-body" id="rb1">
+        <div class="stg-hdr"><span>Stage 1 - IDMT</span><input type="checkbox" id="r1-s1-en" checked onchange="toggleStage('r1-s1-body',this)"></div>
+        <div class="stg-body" id="r1-s1-body">
+          <div class="row"><label id="r1-s1-lb">Pickup I (400kV, A)</label><input type="number" id="r1-s1-ip" value="1000" step="1"></div>
+          <div class="row"><label>TMS</label><input type="number" id="r1-s1-tms" value="0.8" step="0.05"></div>
+          <div class="row"><label>Curve</label><select id="r1-s1-ct"><option value="EI" selected>IEC EI</option><option value="VI">IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
+        </div>
+        <div class="stg-hdr"><span>Stage 2 - IDMT</span><input type="checkbox" id="r1-s2-en" onchange="toggleStage('r1-s2-body',this)"></div>
+        <div class="stg-body hidden" id="r1-s2-body">
+          <div class="row"><label id="r1-s2-lb">Pickup I (400kV, A)</label><input type="number" id="r1-s2-ip" value="10" step="0.1"></div>
+          <div class="row"><label>TMS</label><input type="number" id="r1-s2-tms" value="0.85" step="0.05"></div>
+          <div class="row"><label>Curve</label><select id="r1-s2-ct"><option value="EI" selected>IEC EI</option><option value="VI">IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
+        </div>
+        <div class="stg-hdr"><span>Stage 2 - DT</span><input type="checkbox" id="r1-dt-en" checked onchange="toggleStage('r1-dt-body',this)"></div>
+        <div class="stg-body" id="r1-dt-body">
+          <div class="row"><label id="r1-dt-lb">Pickup I (400kV, A)</label><input type="number" id="r1-dt-ip" value="6000" step="1"></div>
+          <div class="row"><label>td (s)</label><input type="number" id="r1-dt-td" value="0.05" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Relay 2 -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleRelay(2)">
+        <span class="chevron" id="chv2">&#9660;</span>
+        <span class="rdot" style="background:#c0392b"></span>
+        <input class="rname" type="text" id="r2-name" value="Relay 2" onclick="event.stopPropagation()" oninput="render()">
+        <input type="checkbox" id="r2-en" onclick="event.stopPropagation()" onchange="render()">
+      </div>
+      <div class="relay-body" id="rb2">
+        <div class="stg-hdr"><span>Stage 1 - IDMT</span><input type="checkbox" id="r2-s1-en" checked onchange="toggleStage('r2-s1-body',this)"></div>
+        <div class="stg-body" id="r2-s1-body">
+          <div class="row"><label id="r2-s1-lb">Pickup I (400kV, A)</label><input type="number" id="r2-s1-ip" value="7" step="0.1"></div>
+          <div class="row"><label>TMS</label><input type="number" id="r2-s1-tms" value="0.8" step="0.05"></div>
+          <div class="row"><label>Curve</label><select id="r2-s1-ct"><option value="EI">IEC EI</option><option value="VI" selected>IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
+        </div>
+        <div class="stg-hdr"><span>Stage 2 - IDMT</span><input type="checkbox" id="r2-s2-en" onchange="toggleStage('r2-s2-body',this)"></div>
+        <div class="stg-body hidden" id="r2-s2-body">
+          <div class="row"><label id="r2-s2-lb">Pickup I (400kV, A)</label><input type="number" id="r2-s2-ip" value="10" step="0.1"></div>
+          <div class="row"><label>TMS</label><input type="number" id="r2-s2-tms" value="0.85" step="0.05"></div>
+          <div class="row"><label>Curve</label><select id="r2-s2-ct"><option value="EI" selected>IEC EI</option><option value="VI">IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
+        </div>
+        <div class="stg-hdr"><span>Stage 2 - DT</span><input type="checkbox" id="r2-dt-en" checked onchange="toggleStage('r2-dt-body',this)"></div>
+        <div class="stg-body" id="r2-dt-body">
+          <div class="row"><label id="r2-dt-lb">Pickup I (400kV, A)</label><input type="number" id="r2-dt-ip" value="200" step="1"></div>
+          <div class="row"><label>Td (s)</label><input type="number" id="r2-dt-td" value="0.08" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Device -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleCD()">
+        <span class="chevron" id="cdchv">&#9660;</span>
+        <span class="rdot" id="cd0-dot" style="background:#27ae60"></span>
+        <input class="rname" type="text" id="cd0-name" value="Custom Device" onclick="event.stopPropagation()" oninput="render()">
+        <input type="checkbox" id="cd0-en" onclick="event.stopPropagation()" onchange="render()">
+      </div>
+      <div class="cd-body" id="cdb0">
+        <div class="cd-row" style="padding:6px 0 4px;">
+          <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
+          <input type="color" id="cd0-color" value="#27ae60" onchange="window._cdColorChange(0,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
+          <button class="cd-edit-btn" onclick="window.openCDModal(0)">&#9998; Edit Points</button>
+          <span class="cd-ptcount" id="cd0-ptcount">0 pts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fault Levels -->
+    <div class="card">
+      <h4 style="display:flex;align-items:center;justify-content:space-between;">Fault Levels<input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart" onchange="window.flParentEn=this.checked;window.render()" style="margin-left:6px;cursor:pointer;"></h4>
+      <div id="flList"></div>
+      <button class="fl-add" onclick="window.addFL()">+ Add Fault Level</button>
+    </div>
+  </div>
+
+  <div id="chart-area">
+    <div class="legend">
+      <div class="leg-item">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#1e6bb8" stroke-width="2.5"/></svg>
+        <span id="leg-r1-name">Relay 1</span>
+      </div>
+      <div class="leg-item">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#c0392b" stroke-width="2.5"/></svg>
+        <span id="leg-r2-name">Relay 2</span>
+      </div>
+      <div class="leg-item" id="leg-cd0" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#27ae60" stroke-width="2.5" stroke-dasharray="6,3"/></svg>
+        <span id="leg-cd0-name">Custom Device</span>
+      </div>
+      <label class="leg-check">
+        <input type="checkbox" id="showFull" onchange="render()"> Full curves
+      </label>
+      <label class="leg-check">X axis: <select id="xUnit" onchange="render()" style="font-size:11px;padding:2px 4px;border:1px solid #bbb;border-radius:4px;"><option value="kA">kA</option><option value="A">A</option></select></label>
+      <button id="exportBtn" onclick="window.exportPNG()">Export PNG</button>
+      <button id="exportXlsBtn" onclick="window.exportXLSX()">Export Excel</button>
+    </div>
+    <div id="zoom-toolbar">
+      <button class="zt-btn" id="zoomBoxBtn" onclick="window.toggleZoomMode()" title="Click and drag to zoom into a region">&#128269; Box Zoom</button>
+      <button class="zt-btn" id="fitXBtn" onclick="window.fitXAxis()" title="Fit X axis to all curve data">&#8596; Fit X</button>
+      <button class="zt-btn" id="resetZoomBtn" onclick="window.resetZoomAction()" title="Reset zoom to defaults">&#8635; Reset</button>
+    </div>
+    <div id="chartWrap">
+      <canvas id="tcc"></canvas>
+      <div id="zoom-box"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Settings Modal -->
+<div id="settings-modal">
+  <div class="stt-dialog">
+    <div class="stt-hdr"><span>Settings</span><span class="close" onclick="window.closeSettings()">&#x2715;</span></div>
+    <div class="stt-body">
+      <div class="stt-row"><label>Base Voltage (kV)</label><input type="number" id="stt-baseV" step="0.001" min="0.001"></div>
+      <hr class="stt-sep">
+      <div class="stt-row"><label>Current Axis Unit</label><select id="stt-xUnit"><option value="kA">kA</option><option value="A">A</option></select></div>
+      <div class="stt-row"><label>Current Axis Min (A)</label><input type="number" id="stt-xMin" step="1" min="1"></div>
+      <div class="stt-row"><label>Current Axis Max (A)</label><input type="number" id="stt-xMax" step="100" min="10"></div>
+      <hr class="stt-sep">
+      <div class="stt-row"><label>Display Full Curves</label><input type="checkbox" id="stt-showFull"></div>
+    </div>
+    <div class="stt-ftr">
+      <button class="stt-btn" onclick="window.closeSettings()">Cancel</button>
+      <button class="stt-btn stt-btn-ok" onclick="window.applySettings()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal">
+  <div class="help-dialog">
+    <div class="help-dlg-hdr">
+      <span>TCC Reference — IDMT Formulas</span>
+      <span class="close" onclick="window.closeHelp()">&#x2715;</span>
+    </div>
+    <div class="help-body">
+      <h3>General IEC IDMT Formula</h3>
+      <code class="formula">t = TMS &times; b / ( (I / I<sub>p</sub>)<sup>a</sup> &minus; 1 )</code>
+      <p>where <b>t</b> = operate time (s), <b>TMS</b> = time multiplier setting,<br>
+         <b>I</b> = fault current, <b>I<sub>p</sub></b> = pickup current.</p>
+      <h3>IEC Curve Constants</h3>
+      <table class="help-table">
+        <thead><tr><th>Curve</th><th>Name</th><th>b</th><th>a</th></tr></thead>
+        <tbody>
+          <tr><td>IEC SI</td><td>Standard Inverse</td><td>0.14</td><td>0.02</td></tr>
+          <tr><td>IEC VI</td><td>Very Inverse</td><td>13.5</td><td>1</td></tr>
+          <tr><td>IEC EI</td><td>Extremely Inverse</td><td>80</td><td>2</td></tr>
+          <tr><td>IEC LTI</td><td>Long Time Inverse</td><td>120</td><td>1</td></tr>
+        </tbody>
+      </table>
+      <h3>Definite Time (DT) Stage</h3>
+      <code class="formula">t = t<sub>d</sub> &nbsp; &nbsp; (for I &ge; I<sub>pickup</sub>)</code>
+      <p>The DT stage overrides all IDMT stages above its pickup current.<br>
+         The effective operate time is taken from the drawn (effective) curve.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Device Modal -->
+<div id="cd-modal">
+  <div class="cd-dialog">
+    <div class="cd-dlg-hdr">
+      <span id="cd-modal-title">Edit Points</span>
+      <span class="close" onclick="window.closeCDModal()">&#x2715;</span>
+    </div>
+    <div class="cd-toolbar">
+      <button class="cd-tbtn" onclick="window.cdPasteClipboard()" title="Paste two-column TSV (Current tab Time) from clipboard">&#128203; Paste TSV</button>
+      <button class="cd-tbtn" onclick="window.cdAddRow()" title="Add blank row">&#10010; Row</button>
+      <button class="cd-tbtn" onclick="window.cdDelRow()" title="Delete selected row">&#10005;</button>
+      <button class="cd-tbtn" onclick="window.cdMoveUp()" title="Move row up">&#8679;</button>
+      <button class="cd-tbtn" onclick="window.cdMoveDown()" title="Move row down">&#8681;</button>
+    </div>
+    <div id="cd-tbl-wrap">
+      <table id="cd-table">
+        <thead><tr><th>Current (A)</th><th>Time (s)</th></tr></thead>
+        <tbody id="cd-tbody"></tbody>
+      </table>
+    </div>
+    <div class="cd-dlg-ftr">
+      <button class="cd-btn" onclick="window.closeCDModal()">Cancel</button>
+      <button class="cd-btn cd-btn-ok" onclick="window.saveCDModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import './src/chart/plugins.js';
+  import { render, zoomState, resetZoom } from './src/chart/render.js';
+  import { addFL, removeFL, renderFLList } from './src/ui/fault-levels.js';
+  import { faultLevels }                   from './src/state.js';
+  import { exportPNG }                     from './src/ui/export.js';
+  import { exportXLSX }                   from './src/ui/export-excel.js';
+  import {
+    openCDModal, closeCDModal, saveCDModal,
+    cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard
+  } from './src/ui/custom-device.js';
+
+  window.addFL            = addFL;
+  window.removeFL         = removeFL;
+  window.exportPNG        = exportPNG;
+  window.exportXLSX       = exportXLSX;
+  window.faultLevels      = faultLevels;
+  window.openCDModal      = openCDModal;
+  window.closeCDModal     = closeCDModal;
+  window.saveCDModal      = saveCDModal;
+  window.cdAddRow         = cdAddRow;
+  window.cdDelRow         = cdDelRow;
+  window.cdMoveUp         = cdMoveUp;
+  window.cdMoveDown       = cdMoveDown;
+  window.cdPasteClipboard = cdPasteClipboard;
+
+  // Sync dot colour when colour picker changes
+  window._cdColorChange = function(idx, val) {
+    const dot = document.getElementById('cd' + idx + '-dot');
+    if (dot) dot.style.background = val;
+    render();
+  };
+
+  // Wrap render so FL operate times stay in sync
+  window.render = function() { render(); renderFLList(); };
+    window.renderFLList = function() { renderFLList(); };
+
+  window.toggleRelay = function(n) {
+    const body = document.getElementById('rb' + n);
+    const chv  = document.getElementById('chv' + n);
+    body.classList.toggle('collapsed');
+    chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+
+  window.toggleCD = function() {
+    const body = document.getElementById('cdb0');
+    const chv  = document.getElementById('cdchv');
+    body.classList.toggle('collapsed');
+    chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+
+  window.toggleStage = function(bodyId, cb) {
+    document.getElementById(bodyId).classList.toggle('hidden', !cb.checked);
+    render();
+  };
+
+  document.querySelectorAll('input[type=number], select').forEach(el => {
+    el.addEventListener('change', render);
+    el.addEventListener('input',  render);
+  });
+
+
+  // Zoom toolbar
+  let _zoomMode = false, _zoomStart = null;
+  window.toggleZoomMode = function() {
+    _zoomMode = !_zoomMode;
+    document.getElementById('zoomBoxBtn').classList.toggle('active', _zoomMode);
+    document.getElementById('chartWrap').style.cursor = _zoomMode ? 'crosshair' : 'default';
+  };
+  window.resetZoomAction = function() { resetZoom(); render(); };
+  window.fitXAxis = function() {
+    const ch = window._tccChart; if (!ch) return;
+    let mn = Infinity, mx = -Infinity;
+    ch.data.datasets.forEach(ds => ds.data.forEach(p => { if (p.x>0){mn=Math.min(mn,p.x);mx=Math.max(mx,p.x);} }));
+    if (mn===Infinity) return;
+    zoomState.xMin=mn*0.7; zoomState.xMax=mx*1.3; render();
+  };
+  (function(){
+    const wrap=document.getElementById('chartWrap'), zbox=document.getElementById('zoom-box');
+    wrap.addEventListener('mousedown',function(e){
+      if(!_zoomMode)return;
+      const r=wrap.getBoundingClientRect();
+      _zoomStart={x:e.clientX-r.left,y:e.clientY-r.top};
+      Object.assign(zbox.style,{left:_zoomStart.x+'px',top:_zoomStart.y+'px',width:'0px',height:'0px',display:'block'});
+    });
+    wrap.addEventListener('mousemove',function(e){
+      if(!_zoomMode||!_zoomStart)return;
+      const r=wrap.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top;
+      Object.assign(zbox.style,{left:Math.min(cx,_zoomStart.x)+'px',top:Math.min(cy,_zoomStart.y)+'px',width:Math.abs(cx-_zoomStart.x)+'px',height:Math.abs(cy-_zoomStart.y)+'px'});
+    });
+    wrap.addEventListener('mouseup',function(e){
+      if(!_zoomMode||!_zoomStart)return;
+      zbox.style.display='none';
+      const r=wrap.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top;
+      const x1=Math.min(cx,_zoomStart.x),x2=Math.max(cx,_zoomStart.x);
+      const y1=Math.min(cy,_zoomStart.y),y2=Math.max(cy,_zoomStart.y);
+      _zoomStart=null;
+      if(x2-x1<10||y2-y1<10)return;
+      const ch=window._tccChart; if(!ch)return;
+      const sx=ch.scales.x,sy=ch.scales.y;
+      zoomState.xMin=sx.getValueForPixel(x1); zoomState.xMax=sx.getValueForPixel(x2);
+      zoomState.yMin=sy.getValueForPixel(y2); zoomState.yMax=sy.getValueForPixel(y1);
+      render();
+      _zoomMode=false;
+      document.getElementById('zoomBoxBtn').classList.remove('active');
+      document.getElementById('chartWrap').style.cursor='default';
+    });
+  })();
+  window.toggleFullCurves=function(){
+    const cb=document.getElementById('showFull'); cb.checked=!cb.checked;
+    document.getElementById('mb-fullcurves-opt').textContent='Full Curves: '+(cb.checked?'On':'Off');
+    window.closeMenus(); render();
+  };
+  window.showSettings=function(){
+    document.getElementById('stt-baseV').value=document.getElementById('baseV').value;
+    document.getElementById('stt-xUnit').value=document.getElementById('xUnit').value;
+    document.getElementById('stt-xMin').value=Math.round(zoomState.xMin);
+    document.getElementById('stt-xMax').value=Math.round(zoomState.xMax);
+    document.getElementById('stt-showFull').checked=document.getElementById('showFull').checked;
+    document.getElementById('settings-modal').classList.add('open');
+  };
+  window.closeSettings=function(){ document.getElementById('settings-modal').classList.remove('open'); };
+  window.applySettings=function(){
+    const bv=parseFloat(document.getElementById('stt-baseV').value);
+    if(bv>0) document.getElementById('baseV').value=bv;
+    document.getElementById('xUnit').value=document.getElementById('stt-xUnit').value;
+    document.getElementById('showFull').checked=document.getElementById('stt-showFull').checked;
+    const xmn=parseFloat(document.getElementById('stt-xMin').value);
+    const xmx=parseFloat(document.getElementById('stt-xMax').value);
+    if(xmn>0&&xmx>xmn){zoomState.xMin=xmn;zoomState.xMax=xmx;}
+    window.closeSettings(); render();
+  };
+  document.getElementById('settings-modal').addEventListener('click',function(e){if(e.target===this)window.closeSettings();});
+
+  // App menu bar
+  window.closeMenus = function() {
+    document.querySelectorAll('.mb-item').forEach(el => el.classList.remove('open'));
+  };
+  window.toggleMenu = function(id) {
+    const el = document.getElementById('mb-' + id);
+    const wasOpen = el.classList.contains('open');
+    window.closeMenus();
+    if (!wasOpen) el.classList.add('open');
+  };
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.mb-item')) window.closeMenus();
+  });
+
+  // FL parent enable state
+  window.flParentEn = true;
+
+  window.showHelp  = function() { document.getElementById('help-modal').classList.add('open'); };
+  window.closeHelp = function() { document.getElementById('help-modal').classList.remove('open'); };
+  document.getElementById('help-modal').addEventListener('click', function(e) {
+    if (e.target === this) window.closeHelp();
+  });
+
+  window.addEventListener('resize', render);
+  renderFLList();
+  render();
+</script>
+</body>
+</html>
