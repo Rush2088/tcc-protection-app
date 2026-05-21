@@ -401,16 +401,16 @@
 </div>
 
 <script type="module">
-  import './src/chart/plugins.js';
-  import { render, zoomState, resetZoom } from './src/chart/render.js';
-  import { addFL, removeFL, renderFLList } from './src/ui/fault-levels.js';
-  import { faultLevels }                   from './src/state.js';
-  import { exportPNG }                     from './src/ui/export.js';
-  import { exportXLSX }                   from './src/ui/export-excel.js';
+  import './src/chart/plugins.js?v=3';
+  import { render, zoomState, resetZoom } from './src/chart/render.js?v=3';
+  import { addFL, removeFL, renderFLList } from './src/ui/fault-levels.js?v=3';
+  import { faultLevels }                   from './src/state.js?v=3';
+  import { exportPNG }                     from './src/ui/export.js?v=3';
+  import { exportXLSX }                   from './src/ui/export-excel.js?v=3';
   import {
     openCDModal, closeCDModal, saveCDModal,
     cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard
-  } from './src/ui/custom-device.js';
+  } from './src/ui/custom-device.js?v=3';
 
   window.addFL            = addFL;
   window.removeFL         = removeFL;
