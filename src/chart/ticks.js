@@ -17,10 +17,10 @@ export function yTicks() {
 }
 
 /** Tick values that get printed labels on X axis (in Amperes internally) */
-export const X_LABEL = new Set([10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]);
+export const X_LABEL = new Set([10, 100, 1000, 10000, 50000]);
 
 /** Tick values that get printed labels on Y axis (seconds) */
-export const Y_LABEL = new Set([0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]);
+export const Y_LABEL = new Set([0.001, 0.01, 0.1, 1, 10, 100, 1000]);
 
 /** Format Ampere value as kA string — no unit suffix (axis label already states kA) */
 export function fmtKA(vA) {
