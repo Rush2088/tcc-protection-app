@@ -1,19 +1,17 @@
 import { faultLevels }                       from '../state.js';
-import { FL_COLORS }                          from '../chart/plugins.js';
+const FL_COLORS = ['#6c3d91','#2e7d32','#00838f','#f57c00','#37474f','#ad1457'];
+import { render }                             from '../chart/render.js';
 import { operateTime }                        from '../engine/dataset.js';
 import { getRelays, getBaseV }                from './inputs.js';
 import { getCustomDevices, cdOperateTime }    from './custom-device.js';
 
 export function addFL() {
   faultLevels.push({ label: 'FL' + (faultLevels.length + 1), a: 1000, en: true });
-  renderFLList(); window.render();
+  renderFLList(); render();
 }
 export function removeFL(i) {
   faultLevels.splice(i, 1);
-  renderFLList(); window.render();
-}
-export function updateFL(i, field, val) {
-  if (faultLevels[i]) { faultLevels[i][field] = val; }
+  renderFLList(); render();
 }
 
 function fmtMs(t) {
@@ -68,13 +66,13 @@ export function renderFLList() {
       '<div class="fl-row">' +
         '<input type="checkbox"' + (enabled ? ' checked' : '') +
           ' title="Enable/disable this fault level"' +
-          ' onchange="window.updateFL(' + i + ','en',this.checked);window.renderFLList();window.render()">' +
+          ' onchange="window.faultLevels[' + i + '].en=this.checked;window.renderFLList();window.render()">' +
         '<span class="fl-dot" style="background:' + col + '"></span>' +
         '<input class="fl-lbl" type="text" value="' + fl.label + '"' +
-          ' onchange="window.updateFL(' + i + ','label',this.value);window.render()">' +
+          ' onchange="window.faultLevels[' + i + '].label=this.value;window.render()">' +
         '<span class="fl-ilbl">A</span>' +
         '<input class="fl-val" type="number" value="' + fl.a + '" step="any" min="1"' +
-          ' onchange="window.updateFL(' + i + ','a',+this.value);window.render()">' +
+          ' onchange="window.faultLevels[' + i + '].a=+this.value;window.render()">' +
         '<button class="fl-del" onclick="window.removeFL(' + i + ')">&#x2715;</button>' +
       '</div>' +
       (enabled && allTimes.length ?
