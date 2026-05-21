@@ -6,8 +6,8 @@ import { getCustomDevices }                          from '../ui/custom-device.j
 let myChart = null;
 
 // Zoom state — persists across render() calls (log-scale Amps / seconds)
-export const zoomState = { xMin: 10, xMax: 50000, yMin: 0.01, yMax: 100 };
-export function resetZoom() { zoomState.xMin=10; zoomState.xMax=50000; zoomState.yMin=0.01; zoomState.yMax=100; }
+export const zoomState = { xMin: 10, xMax: 50000, yMin: 0.001, yMax: 1000 };
+export function resetZoom() { zoomState.xMin=10; zoomState.xMax=50000; zoomState.yMin=0.001; zoomState.yMax=1000; }
 
 function hexToRgba(hex, a) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);

@@ -8,11 +8,11 @@ export function xTicks() {
   return tks;
 }
 
-/** All 1–9 sub-ticks per decade for Y axis (0.01 s – 100 s) */
+/** All 1–9 sub-ticks per decade for Y axis (0.001 s – 1000 s) */
 export function yTicks() {
   const tks = [];
-  for (let d = 0.001; d <= 100; d *= 10)
-    for (let m = 1; m <= 9; m++) { const v = +(m * d).toPrecision(4); if (v >= 0.01 && v <= 100) tks.push({ value: v }); }
+  for (let d = 0.0001; d <= 1000; d *= 10)
+    for (let m = 1; m <= 9; m++) { const v = +(m * d).toPrecision(4); if (v >= 0.001 && v <= 1000) tks.push({ value: v }); }
   return tks;
 }
 
@@ -20,7 +20,7 @@ export function yTicks() {
 export const X_LABEL = new Set([10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]);
 
 /** Tick values that get printed labels on Y axis (seconds) */
-export const Y_LABEL = new Set([0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100]);
+export const Y_LABEL = new Set([0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000]);
 
 /** Format Ampere value as kA string — no unit suffix (axis label already states kA) */
 export function fmtKA(vA) {
