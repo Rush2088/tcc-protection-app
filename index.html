@@ -423,16 +423,16 @@
 </div>
 
 <script type="module">
-  import './src/chart/plugins.js?v=10';
-  import { render, zoomState, resetZoom } from './src/chart/render.js?v=10';
-  import { addFL, removeFL, renderFLList } from './src/ui/fault-levels.js?v=10';
-  import { faultLevels }                   from './src/state.js?v=10';
-  import { exportPNG }                     from './src/ui/export.js?v=10';
-  import { exportXLSX }                   from './src/ui/export-excel.js?v=10';
+  import './src/chart/plugins.js';
+  import { render, zoomState, resetZoom } from './src/chart/render.js';
+  import { addFL, removeFL, renderFLList, updateFL } from './src/ui/fault-levels.js';
+  import { faultLevels }                   from './src/state.js';
+  import { exportPNG }                     from './src/ui/export.js';
+  import { exportXLSX }                   from './src/ui/export-excel.js';
   import {
     openCDModal, closeCDModal, saveCDModal,
     cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard
-  } from './src/ui/custom-device.js?v=10';
+  } from './src/ui/custom-device.js';
 
   window.addFL            = addFL;
   window.removeFL         = removeFL;
@@ -447,6 +447,7 @@
   window.cdMoveUp         = cdMoveUp;
   window.cdMoveDown       = cdMoveDown;
   window.cdPasteClipboard = cdPasteClipboard;
+  window.updateFL         = updateFL;
 
   // Sync dot colour when colour picker changes
   window._cdColorChange = function(idx, val) {
@@ -455,9 +456,11 @@
     render();
   };
 
-  // Wrap render so FL operate times stay in sync
-  window.render = function() { render(); renderFLList(); };
-    window.renderFLList = function() { renderFLList(); };
+  // Chart-only render — safe to call from oninput (no DOM rebuild)
+  window.renderChart  = function() { render(); };
+  // Full render: chart + FL operate-time table
+  window.render       = function() { render(); renderFLList(); };
+  window.renderFLList = function() { renderFLList(); };
 
   window.toggleRelay = function(n) {
     const body = document.getElementById('rb' + n);
