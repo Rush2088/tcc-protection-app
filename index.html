@@ -308,6 +308,7 @@
     <!-- Custom 3 -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleCD(2)">
+        <span class="chevron" id="cdchv2">&#9654;</span>
         <span class="rdot" id="cd2-dot" style="background:#8e44ad"></span>
         <input class="rname" type="text" id="cd2-name" value="Custom 3" onclick="event.stopPropagation()" oninput="render()">
         <input type="checkbox" id="cd2-en" onclick="event.stopPropagation()" onchange="render()">
@@ -324,7 +325,8 @@
     <!-- Fault Levels -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleFL()">
-        <span style="font-weight:600;font-size:13px;flex:1;">Fault Levels</span>
+        <span class="chevron" id="flchv">&#9654;</span>
+        <span class="rname" style="flex:1;font-weight:600;">Fault Levels</span>
         <input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart"
           onchange="window.flParentEn=this.checked;window.render()" onclick="event.stopPropagation()" style="cursor:pointer;">
       </div>
@@ -337,7 +339,10 @@
     <!-- Thermal Damage Curves -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleTDC()">
-        <span style="font-weight:600;font-size:13px;flex:1;">Thermal Damage Curve</span>
+        <span class="chevron" id="tdcchv">&#9654;</span>
+        <span class="rname" style="flex:1;font-weight:600;">Thermal Damage</span>
+        <input type="checkbox" id="tdcParentEn" title="Show/hide all thermal damage curves"
+          onclick="event.stopPropagation()" onchange="window.tdcParentEn=this.checked;window.render()" style="cursor:pointer;">
       </div>
       <div class="relay-body collapsed" id="tdcBody">
         <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
@@ -557,8 +562,18 @@
     chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   };
 
-  window.toggleFL  = function() { document.getElementById('flBody').classList.toggle('collapsed'); };
-  window.toggleTDC = function() { document.getElementById('tdcBody').classList.toggle('collapsed'); };
+  window.toggleFL = function() {
+    const body = document.getElementById('flBody');
+    const chv  = document.getElementById('flchv');
+    body.classList.toggle('collapsed');
+    if (chv) chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
+  window.toggleTDC = function() {
+    const body = document.getElementById('tdcBody');
+    const chv  = document.getElementById('tdcchv');
+    body.classList.toggle('collapsed');
+    if (chv) chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+  };
 
   window.toggleStage = function(bodyId, cb) {
     document.getElementById(bodyId).classList.toggle('hidden', !cb.checked);
@@ -659,6 +674,7 @@
 
   // FL parent enable state
   window.flParentEn = true;
+  window.tdcParentEn = false;
 
   window.showHelp  = function() { document.getElementById('help-modal').classList.add('open'); };
   window.closeHelp = function() { document.getElementById('help-modal').classList.remove('open'); };

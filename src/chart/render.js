@@ -90,6 +90,7 @@ export function render() {
   });
 
   // ── Thermal Damage Curve datasets ─────────────────────────────────────────
+  if (window.tdcParentEn !== false) {
   const tdcK    = parseFloat((document.getElementById('tdc-k')    || {}).value) || 143;
   const tdcIMin = (parseFloat((document.getElementById('tdc-imin') || {}).value) || 1)  * 1000;
   const tdcIMax = (parseFloat((document.getElementById('tdc-imax') || {}).value) || 20) * 1000;
@@ -120,6 +121,8 @@ export function render() {
     datasets.push({ data: pts, borderColor: col, borderWidth: 2, borderDash: [5, 3],
                     pointRadius: 0, showLine: true, tension: 0 });
   });
+
+  } // end tdcParentEn
 
   // FL vertical lines drawn in flLabelPlugin (canvas clip keeps them within plot area)
 
