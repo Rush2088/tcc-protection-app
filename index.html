@@ -271,17 +271,17 @@
         <div style="padding:4px 8px 6px;">
           <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
             <span class="rdot" id="tx0-dot" style="background:#e91e63"></span>
-            <input class="rname" type="text" id="tx0-name" value="TX 1"
+            <input class="rname" type="text" id="tx0-name" value="Aux Tx"
               onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
             <input type="checkbox" id="tx0-en" onclick="event.stopPropagation()" onchange="window.render()">
             <input type="color" id="tx0-color" value="#e91e63"
               onchange="document.getElementById('tx0-dot').style.background=this.value;window.render()"
               style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
           </div>
-          <div class="row"><label>Rating (MVA)</label><input type="number" id="tx0-mva" value="5" min="0.001" step="1" oninput="window._txBadge()"></div>
-          <div class="row"><label>Fault level (kA)</label><input type="number" id="tx0-isc" value="20" min="0.01" step="0.1"></div>
-          <span id="tx0-badge" style="display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;margin-top:4px;margin-bottom:2px;background:#e3f2fd;color:#1565c0;border:0.5px solid #90caf9;">Cat II</span>
-          <div id="tx0-freq-row" style="display:flex;align-items:center;gap:5px;margin-top:3px;">
+          <div class="row"><label>Rating (MVA)</label><input type="number" id="tx0-mva" value="0.5" min="0.001" step="1" oninput="window._txBadge()"></div>
+          <div class="row"><label>Fault level (kA)</label><input type="number" id="tx0-isc" value="11" min="0.01" step="0.1"></div>
+          <span id="tx0-badge" style="display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;margin-top:4px;margin-bottom:2px;background:#f5f5f5;color:#888;border:0.5px solid #ddd;">Cat I - thermal only</span>
+          <div id="tx0-freq-row" style="display:none;align-items:center;gap:5px;margin-top:3px;">
             <input type="checkbox" id="tx0-freq" onclick="event.stopPropagation()" onchange="window.render()">
             <label for="tx0-freq" style="font-size:11px;color:#666;">Show mechanical boundary</label>
           </div>
@@ -333,7 +333,7 @@
         <span id="leg-tdc1-name">Cable 2</span>
         <div class="leg-item" id="leg-tx0" style="display:none;">
         <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e91e63" stroke-width="2.5" stroke-dasharray="5 3"/></svg>
-        <span id="leg-tx0-name">TX 1</span>
+        <span id="leg-tx0-name">Aux Tx</span>
       </div>
     </div>
     </div>

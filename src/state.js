@@ -28,5 +28,5 @@ export const thermalCables = [
 ];
 
 export const thermalTransformers = [
-  { name: 'TX 1', en: false, color: '#e91e63', mva: 5, isc: 20, showFreq: false }
+  { name: 'Aux Tx', en: false, color: '#e91e63', mva: 0.5, isc: 11, showFreq: false }
 ];
