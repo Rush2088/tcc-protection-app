@@ -55,4 +55,11 @@ export function exportPNG() {
   link.download  = 'TCC_' + bv + 'kV.png';
   link.href      = out.toDataURL('image/png');
   link.click();
+
+  // Silently copy to clipboard in parallel
+  out.toBlob(blob => {
+    if (navigator.clipboard && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).catch(() => {});
+    }
+  });
 }
