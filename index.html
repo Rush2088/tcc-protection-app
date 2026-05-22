@@ -6,6 +6,7 @@
 <title>Protection Coordination - TCC v2</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #f0f2f5; font-family: Arial, sans-serif; font-size: 13px; color: #222; }
@@ -178,6 +179,7 @@
       <div class="mb-sep"></div>
       <div class="mb-opt" onclick="window.exportPNG();window.closeMenus()">Export PNG</div>
       <div class="mb-opt" onclick="window.exportXLSX();window.closeMenus()">Export Excel</div>
+      <div class="mb-opt" onclick="window.exportReport();window.closeMenus()">&#128196; Export Report (PDF)</div>
     </div>
   </div>
   <div class="mb-item" id="mb-view">
@@ -433,6 +435,7 @@
   import { faultLevels }                   from './src/state.js';
   import { exportPNG }                     from './src/ui/export.js';
   import { exportXLSX }                   from './src/ui/export-excel.js';
+  import { exportReport }                  from './src/ui/export-report.js';
   import { saveSession, loadSession }      from './src/ui/session.js';
   import {
     openCDModal, closeCDModal, saveCDModal,
@@ -443,6 +446,7 @@
   window.removeFL         = removeFL;
   window.exportPNG        = exportPNG;
   window.exportXLSX       = exportXLSX;
+  window.exportReport     = exportReport;
   window.saveSession      = saveSession;
   window.loadSession      = loadSession;
   window.faultLevels      = faultLevels;
