@@ -112,21 +112,19 @@ export function render() {
 
       if (!entries.length) return;
 
-      // ── Draw vertical lines clipped to the chart plot area ──────────────────
+      // ── Draw vertical lines — only when px is strictly inside the plot area ──
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(ca.left, ca.top, ca.right - ca.left, ca.bottom - ca.top);
-      ctx.clip();
+      ctx.setLineDash([6, 3]);
+      ctx.lineWidth = 1.5;
       entries.forEach(({ px, col }) => {
-        const lx = Math.max(ca.left + 0.5, Math.min(ca.right - 0.5, px));
+        if (px <= ca.left || px >= ca.right) return;  // skip any line outside plot
         ctx.beginPath();
-        ctx.setLineDash([6, 3]);
         ctx.strokeStyle = col;
-        ctx.lineWidth   = 1.5;
-        ctx.moveTo(lx, ca.top);
-        ctx.lineTo(lx, ca.bottom);
+        ctx.moveTo(px, ca.top);
+        ctx.lineTo(px, ca.bottom);
         ctx.stroke();
       });
+      ctx.setLineDash([]);
       ctx.restore();
 
       // ── Draw labels above the chart area (no clip needed) ───────────────────

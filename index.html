@@ -40,8 +40,8 @@
   .leg-check { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; color: #888; }
   #chartWrap { position: relative; flex: 1; min-height: 0; }
   #chartWrap canvas { display: block; }
-  #exportBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
-  #exportBtn:hover { background: #274f7a; }
+  #exportBtn, #exportXlsBtn, #exportRptBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  #exportBtn:hover, #exportXlsBtn:hover, #exportRptBtn:hover { background: #274f7a; }
   .fl-row { display: flex; align-items: center; gap: 4px; width: 100%; }
   .fl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .fl-lbl { font-size: 11px; padding: 2px 4px; border: 1px solid #bbb; border-radius: 4px; flex: 1; min-width: 0; }
@@ -99,8 +99,8 @@
   .cd-btn-ok:hover { background: #274f7a; }
 
   /* Export Excel + Help buttons */
-  #exportXlsBtn { padding: 6px 14px; background: #1d6f42; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
-  #exportXlsBtn:hover { background: #26925a; }
+  #exportXlsBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  #exportXlsBtn:hover { background: #274f7a; }
 
   /* Help modal */
   #help-modal {
@@ -337,7 +337,7 @@
       <label class="leg-check">X axis: <select id="xUnit" onchange="render()" style="font-size:11px;padding:2px 4px;border:1px solid #bbb;border-radius:4px;"><option value="kA">kA</option><option value="A">A</option></select></label>
       <button id="exportBtn" onclick="window.exportPNG()">Export PNG</button>
       <button id="exportXlsBtn" onclick="window.exportXLSX()">Export Excel</button>
-      <button id="exportRptBtn" onclick="window.exportReport()" style="background:#1a3a5c;color:#fff;border:none;padding:6px 14px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:600;">Export Report</button>
+      <button id="exportRptBtn" onclick="window.exportReport()">Export Report</button>
     </div>
     <div id="zoom-toolbar">
       <button class="zt-btn" id="zoomBoxBtn" onclick="window.toggleZoomMode()" title="Click and drag to zoom into a region">&#128269; Box Zoom</button>
