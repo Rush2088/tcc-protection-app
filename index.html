@@ -305,11 +305,65 @@
       </div>
     </div>
 
+    <!-- Custom 3 -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleCD(2)">
+        <span class="rdot" id="cd2-dot" style="background:#8e44ad"></span>
+        <input class="rname" type="text" id="cd2-name" value="Custom 3" onclick="event.stopPropagation()" oninput="render()">
+        <input type="checkbox" id="cd2-en" onclick="event.stopPropagation()" onchange="render()">
+      </div>
+      <div class="cd-body collapsed" id="cdb2">
+        <div class="cd-tools">
+          <input type="color" id="cd2-color" value="#8e44ad" onchange="window._cdColorChange(2,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
+          <button class="cd-btn" onclick="window.openCDModal(2)">Edit Points</button>
+          <span class="cd-ptcount" id="cd2-ptcount">0 pts</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Fault Levels -->
-    <div class="card">
-      <h4 style="display:flex;align-items:center;justify-content:space-between;">Fault Levels<input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart" onchange="window.flParentEn=this.checked;window.render()" style="margin-left:6px;cursor:pointer;"></h4>
-      <div id="flList"></div>
-      <button class="fl-add" onclick="window.addFL()">+ Add Fault Level</button>
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleFL()">
+        <span style="font-weight:600;font-size:13px;flex:1;">Fault Levels</span>
+        <input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart"
+          onchange="window.flParentEn=this.checked;window.render()" onclick="event.stopPropagation()" style="cursor:pointer;">
+      </div>
+      <div class="relay-body collapsed" id="flBody">
+        <div id="flList"></div>
+        <button class="fl-add" onclick="window.addFL()">+ Add Fault Level</button>
+      </div>
+    </div>
+
+    <!-- Thermal Damage Curves -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleTDC()">
+        <span style="font-weight:600;font-size:13px;flex:1;">Thermal Damage Curve</span>
+      </div>
+      <div class="relay-body collapsed" id="tdcBody">
+        <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+            <span class="rdot" id="tdc0-dot" style="background:#795548"></span>
+            <input class="rname" type="text" id="tdc0-name" value="Cable 1" onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input type="checkbox" id="tdc0-en" onclick="event.stopPropagation()" onchange="window.render()">
+            <input type="color" id="tdc0-color" value="#795548" onchange="document.getElementById('tdc0-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+          </div>
+          <div class="row"><label>Area (mm²)</label><input type="number" id="tdc0-area" value="95" min="1" step="1"></div>
+        </div>
+        <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+            <span class="rdot" id="tdc1-dot" style="background:#607d8b"></span>
+            <input class="rname" type="text" id="tdc1-name" value="Cable 2" onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input type="checkbox" id="tdc1-en" onclick="event.stopPropagation()" onchange="window.render()">
+            <input type="color" id="tdc1-color" value="#607d8b" onchange="document.getElementById('tdc1-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+          </div>
+          <div class="row"><label>Area (mm²)</label><input type="number" id="tdc1-area" value="50" min="1" step="1"></div>
+        </div>
+        <div style="padding:4px 8px 6px;">
+          <div class="row"><label>k factor</label><input type="number" id="tdc-k" value="143" min="1" step="1"></div>
+          <div class="row"><label>I min (kA)</label><input type="number" id="tdc-imin" value="1" min="0.001" step="0.1"></div>
+          <div class="row"><label>I max (kA)</label><input type="number" id="tdc-imax" value="20" min="0.1" step="1"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -330,6 +384,18 @@
       <div class="leg-item" id="leg-cd1" style="display:none;">
         <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e67e22" stroke-width="2.5"/></svg>
         <span id="leg-cd1-name">Custom 2</span>
+      </div>
+      <div class="leg-item" id="leg-cd2" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#8e44ad" stroke-width="2.5"/></svg>
+        <span id="leg-cd2-name">Custom 3</span>
+      </div>
+      <div class="leg-item" id="leg-tdc0" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#795548" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
+        <span id="leg-tdc0-name">Cable 1</span>
+      </div>
+      <div class="leg-item" id="leg-tdc1" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#607d8b" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
+        <span id="leg-tdc1-name">Cable 2</span>
       </div>
       <label class="leg-check">
         <input type="checkbox" id="showFull" onchange="render()"> Full curves
@@ -490,6 +556,9 @@
     body.classList.toggle('collapsed');
     chv.innerHTML = body.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
   };
+
+  window.toggleFL  = function() { document.getElementById('flBody').classList.toggle('collapsed'); };
+  window.toggleTDC = function() { document.getElementById('tdcBody').classList.toggle('collapsed'); };
 
   window.toggleStage = function(bodyId, cb) {
     document.getElementById(bodyId).classList.toggle('hidden', !cb.checked);

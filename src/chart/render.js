@@ -2,7 +2,7 @@ import { build }                                     from '../engine/dataset.js'
 import { xTicks, yTicks, X_LABEL, Y_LABEL, fmtKA }  from './ticks.js';
 import { getRelays, getBaseV, getShowFull, getXUnit } from '../ui/inputs.js';
 import { getCustomDevices }                          from '../ui/custom-device.js';
-import { faultLevels }                               from '../state.js';
+import { faultLevels, thermalCables }               from '../state.js';
 
 const FL_COLORS = ['#6c3d91','#2e7d32','#00838f','#f57c00','#37474f','#ad1457'];
 
@@ -87,6 +87,38 @@ export function render() {
     if (legEl)  { legEl.style.display = ''; }
     if (nameEl) nameEl.textContent = cd.name;
     if (lineEl) lineEl.setAttribute('stroke', cd.color);
+  });
+
+  // ── Thermal Damage Curve datasets ─────────────────────────────────────────
+  const tdcK    = parseFloat((document.getElementById('tdc-k')    || {}).value) || 143;
+  const tdcIMin = (parseFloat((document.getElementById('tdc-imin') || {}).value) || 1)  * 1000;
+  const tdcIMax = (parseFloat((document.getElementById('tdc-imax') || {}).value) || 20) * 1000;
+  const tdcN    = 120;
+  thermalCables.forEach((tc, i) => {
+    const enEl   = document.getElementById('tdc' + i + '-en');
+    const areaEl = document.getElementById('tdc' + i + '-area');
+    const colEl  = document.getElementById('tdc' + i + '-color');
+    const nameEl = document.getElementById('tdc' + i + '-name');
+    const legEl  = document.getElementById('leg-tdc' + i);
+    const legNm  = document.getElementById('leg-tdc' + i + '-name');
+    const legLn  = legEl ? legEl.querySelector('line') : null;
+    const en     = enEl   ? enEl.checked               : tc.en;
+    const area   = areaEl ? (parseFloat(areaEl.value) || tc.area) : tc.area;
+    const col    = colEl  ? colEl.value                : tc.color;
+    const nm     = nameEl ? nameEl.value               : tc.name;
+    if (legEl)  legEl.style.display = en ? '' : 'none';
+    if (legNm)  legNm.textContent   = nm;
+    if (legLn)  legLn.setAttribute('stroke', col);
+    if (!en || area <= 0 || tdcIMin <= 0 || tdcIMax <= tdcIMin) return;
+    const pts = [];
+    for (let j = 0; j <= tdcN; j++) {
+      const I = Math.exp(Math.log(tdcIMin) + (Math.log(tdcIMax) - Math.log(tdcIMin)) * j / tdcN);
+      const t = Math.pow(tdcK * area / I, 2);
+      if (t > 0 && isFinite(t)) pts.push({ x: I, y: t });
+    }
+    if (pts.length < 2) return;
+    datasets.push({ data: pts, borderColor: col, borderWidth: 2, borderDash: [5, 3],
+                    pointRadius: 0, showLine: true, tension: 0 });
   });
 
   // FL vertical lines drawn in flLabelPlugin (canvas clip keeps them within plot area)

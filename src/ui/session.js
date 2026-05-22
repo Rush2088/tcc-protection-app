@@ -5,7 +5,7 @@
  *   version, baseV, relays[1-2], customDevices[0-1], faultLevels[]
  */
 
-import { faultLevels, customDevices } from '../state.js';
+import { faultLevels, customDevices, thermalCables } from '../state.js';
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────
 const gEl  = id => document.getElementById(id);
@@ -60,6 +60,17 @@ export function saveSession() {
       color:  gVal('cd' + i + '-color') || cd.color,
       points: cd.points.map(p => ({ i: p.i, t: p.t }))
     })),
+    thermalCables: thermalCables.map((tc, i) => ({
+      name:  gVal('tdc' + i + '-name')  || tc.name,
+      en:    gChk('tdc' + i + '-en'),
+      color: gVal('tdc' + i + '-color') || tc.color,
+      area:  parseFloat(gVal('tdc' + i + '-area')) || tc.area
+    })),
+    thermalSettings: {
+      k:    parseFloat(gVal('tdc-k'))    || 143,
+      iMin: parseFloat(gVal('tdc-imin')) || 1,
+      iMax: parseFloat(gVal('tdc-imax')) || 20
+    },
     faultLevels: faultLevels.map(fl => ({
       label: fl.label,
       a:     fl.a,
@@ -117,6 +128,27 @@ function applySession(data) {
   // Fault levels — clear and repopulate
   faultLevels.length = 0;
   (data.faultLevels || []).forEach(fl => faultLevels.push({ label: fl.label, a: fl.a, en: fl.en !== false }));
+
+  // Thermal damage cables
+  (data.thermalCables || []).forEach((tc, i) => {
+    if (!thermalCables[i]) return;
+    sVal('tdc' + i + '-name',  tc.name);
+    sChk('tdc' + i + '-en',    tc.en);
+    sVal('tdc' + i + '-color', tc.color);
+    sVal('tdc' + i + '-area',  tc.area);
+    thermalCables[i].name  = tc.name;
+    thermalCables[i].color = tc.color;
+    thermalCables[i].en    = tc.en;
+    thermalCables[i].area  = tc.area;
+    const dotEl = gEl('tdc' + i + '-dot');
+    if (dotEl) dotEl.style.background = tc.color;
+  });
+  if (data.thermalSettings) {
+    const ts = data.thermalSettings;
+    if (ts.k    != null) sVal('tdc-k',    ts.k);
+    if (ts.iMin != null) sVal('tdc-imin', ts.iMin);
+    if (ts.iMax != null) sVal('tdc-imax', ts.iMax);
+  }
 
   // Refresh chart + FL list
   if (window.render) window.render();

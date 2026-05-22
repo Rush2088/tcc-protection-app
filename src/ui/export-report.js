@@ -210,9 +210,11 @@ function addSettingsPage(doc) {
   })).filter(cd => cd.en || cd.points.length > 0);
 
   if (cds.length) {
-    drawCDBox(doc, cds[0], col1X, y, colW);
-    if (cds[1]) drawCDBox(doc, cds[1], col2X, y, colW);
-    y += 33;
+    for (let ci = 0; ci < cds.length; ci += 2) {
+      drawCDBox(doc, cds[ci],     ci === 0 ? col1X : col1X, y, colW);
+      if (cds[ci + 1]) drawCDBox(doc, cds[ci + 1], col2X, y, colW);
+      y += 33;
+    }
   }
 
   // Fault Levels table
