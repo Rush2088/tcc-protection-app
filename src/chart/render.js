@@ -165,7 +165,7 @@ export function render() {
     for (let j = 0; j <= N; j++) {
       const I = Math.exp(Math.log(IMinA) + (Math.log(IMaxA) - Math.log(IMinA)) * j / N);
       const t = K1 / (I * I);
-      if (t > 0 && isFinite(t)) ptsT.push({ x: I, y: t });
+      if (t >= 0.5 && t <= 20 && isFinite(t)) ptsT.push({ x: I, y: t });
     }
     if (ptsT.length >= 2)
       datasets.push({ data: ptsT, borderColor: col, borderWidth: 2.5,
@@ -175,7 +175,7 @@ export function render() {
       for (let j = 0; j <= N; j++) {
         const I = Math.exp(Math.log(IMinA) + (Math.log(IMaxA) - Math.log(IMinA)) * j / N);
         const t = (I <= IbrkA) ? K1 / (I * I) : K2 / (I * I);
-        if (t > 0 && isFinite(t)) ptsM.push({ x: I, y: t });
+        if (t >= 0.5 && t <= 20 && isFinite(t)) ptsM.push({ x: I, y: t });
       }
       if (ptsM.length >= 2)
         datasets.push({ data: ptsM, borderColor: col, borderWidth: 1.5,
