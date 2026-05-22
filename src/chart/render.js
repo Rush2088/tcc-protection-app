@@ -103,7 +103,7 @@ export function render() {
       const entries = [];
       faultLevels.forEach((fl, i) => {
         if (fl.en === false || !fl.a) return;
-        if (fl.a < x.min * 0.99 || fl.a > x.max * 1.01) return;
+        if (fl.a < x.min || fl.a > x.max) return;
         const px  = x.getPixelForValue(fl.a);
         const kA  = (fl.a / 1000).toFixed(fl.a < 100 ? 2 : fl.a < 1000 ? 1 : 0);
         const lbl = (fl.label || ('FL' + (i + 1))) + '  ' + kA + ' kA';
@@ -118,12 +118,13 @@ export function render() {
       ctx.rect(ca.left, ca.top, ca.right - ca.left, ca.bottom - ca.top);
       ctx.clip();
       entries.forEach(({ px, col }) => {
+        const lx = Math.max(ca.left + 0.5, Math.min(ca.right - 0.5, px));
         ctx.beginPath();
         ctx.setLineDash([6, 3]);
         ctx.strokeStyle = col;
         ctx.lineWidth   = 1.5;
-        ctx.moveTo(px, ca.top);
-        ctx.lineTo(px, ca.bottom);
+        ctx.moveTo(lx, ca.top);
+        ctx.lineTo(lx, ca.bottom);
         ctx.stroke();
       });
       ctx.restore();

@@ -56,16 +56,15 @@ function addChartPage(doc) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(90, 90, 90);
-  doc.text('Base: ' + bv + ' kV', MAR, MAR + 6);
   doc.text(dateStr, PW - MAR, MAR, { align: 'right' });
 
   doc.setDrawColor(200, 210, 220);
   doc.setLineWidth(0.4);
-  doc.line(MAR, MAR + 9, PW - MAR, MAR + 9);
+  doc.line(MAR, MAR + 6, PW - MAR, MAR + 6);
 
   // Legend
   const items = legendItems();
-  let legY = MAR + 14;
+  let legY = MAR + 11;
   if (items.length) {
     doc.setFontSize(8.5);
     let lx = MAR;
