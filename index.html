@@ -314,9 +314,10 @@
         <input type="checkbox" id="cd2-en" onclick="event.stopPropagation()" onchange="render()">
       </div>
       <div class="cd-body collapsed" id="cdb2">
-        <div class="cd-tools">
+        <div class="cd-row" style="padding:6px 0 4px;">
+          <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
           <input type="color" id="cd2-color" value="#8e44ad" onchange="window._cdColorChange(2,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
-          <button class="cd-btn" onclick="window.openCDModal(2)">Edit Points</button>
+          <button class="cd-edit-btn" onclick="window.openCDModal(2)">&#9998; Edit Points</button>
           <span class="cd-ptcount" id="cd2-ptcount">0 pts</span>
         </div>
       </div>

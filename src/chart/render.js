@@ -182,6 +182,42 @@ export function render() {
         ctx.fillText(lbl, px + 5, ca.top + 14 + level * 14);
       });
       ctx.restore();
+
+      // ── Thermal Damage Curve annotations ────────────────────────────────────
+      if (window.tdcParentEn !== false) {
+        const tdcK2    = parseFloat((document.getElementById('tdc-k')    || {}).value) || 143;
+        const tdcIMin2 = (parseFloat((document.getElementById('tdc-imin') || {}).value) || 1)  * 1000;
+        const tdcIMax2 = (parseFloat((document.getElementById('tdc-imax') || {}).value) || 20) * 1000;
+        // Label position: 70% along the log I range
+        const labelI   = Math.exp(Math.log(tdcIMin2) + 0.70 * (Math.log(tdcIMax2) - Math.log(tdcIMin2)));
+        thermalCables.forEach((tc, i) => {
+          const enEl   = document.getElementById('tdc' + i + '-en');
+          const areaEl = document.getElementById('tdc' + i + '-area');
+          const colEl  = document.getElementById('tdc' + i + '-color');
+          const nameEl = document.getElementById('tdc' + i + '-name');
+          const en     = enEl   ? enEl.checked               : tc.en;
+          const area   = areaEl ? (parseFloat(areaEl.value) || tc.area) : tc.area;
+          const col    = colEl  ? colEl.value                : tc.color;
+          const nm     = nameEl ? nameEl.value               : tc.name;
+          if (!en || area <= 0) return;
+          const t = Math.pow(tdcK2 * area / labelI, 2);
+          if (!isFinite(t) || t <= 0) return;
+          const lpx = x.getPixelForValue(labelI);
+          const lpy = y.getPixelForValue(t);
+          if (lpx < ca.left || lpx > ca.right || lpy < ca.top || lpy > ca.bottom) return;
+          ctx.save();
+          ctx.font      = 'bold 9px Arial';
+          ctx.fillStyle = col;
+          ctx.textAlign = 'left';
+          // draw small background rectangle for readability
+          const tw = ctx.measureText(nm).width;
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.fillRect(lpx + 4, lpy - 10, tw + 6, 13);
+          ctx.fillStyle = col;
+          ctx.fillText(nm, lpx + 7, lpy);
+          ctx.restore();
+        });
+      }
     }
   };
 
