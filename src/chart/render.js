@@ -77,8 +77,8 @@ export function render() {
     // log-scale boundary rather than crashing; the polygon perimeter still
     // traces correctly with the remaining points.
     const data = cd.points
-      .filter(p => p.i > 0)
-      .map(p => (p.t > 0 ? { x: p.i, y: p.t } : null));
+      .filter(p => p.i > 0 && p.t > 0)
+      .map(p => ({ x: p.i, y: p.t }));
     const validCount = data.filter(Boolean).length;
     if (!validCount) { if (legEl) legEl.style.display = 'none'; return; }
     datasets.push({
@@ -315,7 +315,10 @@ export function render() {
     }
   };
 
-  if (myChart) { myChart.destroy(); myChart = null; }
+  const _canvas = document.getElementById('tcc');
+  const _stuck  = Chart.getChart(_canvas);
+  if (_stuck) { try { _stuck.destroy(); } catch(e) {} }
+  myChart = null;
   myChart = new Chart(document.getElementById('tcc'), {
     type: 'scatter',
     plugins: [flLabelPlugin],
