@@ -159,7 +159,7 @@ export function render() {
           type: 'logarithmic', min: zoomState.yMin, max: zoomState.yMax,
           title: { display: true, text: 'Trip time (s)', color: '#333', font: { size: 12 } },
           afterBuildTicks: ax => { const mn=zoomState.yMin, mx=zoomState.yMax; ax.ticks = yTicks().filter(t => t.value >= mn*0.9 && t.value <= mx*1.1); },
-          ticks: { color: '#444', callback(v) { for (const lv of Y_LABEL) { if (Math.abs(v/lv-1)<0.01) return String(lv); } return ''; } },
+          ticks: { color: '#444', autoSkip: false, callback(v) { for (const lv of Y_LABEL) { if (Math.abs(v/lv-1)<0.01) return String(lv); } return ''; } },
           grid: { display: false }
         }
       }
