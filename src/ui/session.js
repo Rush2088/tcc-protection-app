@@ -56,8 +56,7 @@ export function loadSession() {
     const file = e.target.files[0];
     if (!file) return;
     try { applySession(JSON.parse(await file.text())); }
-    catch (err) { alert('Failed to load settings:
-' + err.message); }
+    catch (err) { alert('Failed to load settings: ' + err.message); }
   };
   inp.click();
 }
