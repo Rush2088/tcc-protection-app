@@ -158,7 +158,7 @@ export function render() {
     const brkPct = cat === 'II' ? 0.70 : 0.50;
     const IbrkA  = brkPct * IscA;
     const IMinA  = zoomState.xMin;
-    const IMaxA  = Math.min(IscA, zoomState.xMax);
+    const IMaxA  = zoomState.xMax;
     if (IMaxA <= IMinA) return;
     const N = 120;
     const ptsT = [];
