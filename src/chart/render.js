@@ -189,7 +189,7 @@ export function render() {
         const tdcIMin2 = (parseFloat((document.getElementById('tdc-imin') || {}).value) || 1)  * 1000;
         const tdcIMax2 = (parseFloat((document.getElementById('tdc-imax') || {}).value) || 20) * 1000;
         // Label position: 70% along the log I range
-        const labelI   = Math.exp(Math.log(tdcIMin2) + 0.70 * (Math.log(tdcIMax2) - Math.log(tdcIMin2)));
+        const labelI   = tdcIMax2;  // label at the right (max-current) end of the curve
         thermalCables.forEach((tc, i) => {
           const enEl   = document.getElementById('tdc' + i + '-en');
           const areaEl = document.getElementById('tdc' + i + '-area');
@@ -212,9 +212,10 @@ export function render() {
           // draw small background rectangle for readability
           const tw = ctx.measureText(nm).width;
           ctx.fillStyle = 'rgba(255,255,255,0.75)';
-          ctx.fillRect(lpx + 4, lpy - 10, tw + 6, 13);
+          ctx.fillRect(lpx - tw - 10, lpy - 10, tw + 6, 13);
           ctx.fillStyle = col;
-          ctx.fillText(nm, lpx + 7, lpy);
+          ctx.textAlign = 'right';
+          ctx.fillText(nm, lpx - 4, lpy);
           ctx.restore();
         });
       }

@@ -211,117 +211,11 @@
       <div class="row"><label>Base Voltage</label><input type="text" id="baseV" value="0.4" maxlength="5" style="width:3.5em;"><span style="margin-left:3px;font-size:11px;color:#555">kV</span></div>
     </div>
 
-    <!-- Relay 1 -->
-    <div class="relay-card">
-      <div class="relay-hdr" onclick="toggleRelay(1)">
-        <span class="chevron" id="chv1">&#9654;</span>
-        <span class="rdot" style="background:#1e6bb8"></span>
-        <input class="rname" type="text" id="r1-name" value="Relay 1" onclick="event.stopPropagation()" oninput="render()">
-        <input type="checkbox" id="r1-en" checked onclick="event.stopPropagation()" onchange="render()">
-      </div>
-      <div class="relay-body collapsed" id="rb1">
-        <div class="stg-hdr"><span>Stage 1 - IDMT</span><input type="checkbox" id="r1-s1-en" checked onchange="toggleStage('r1-s1-body',this)"></div>
-        <div class="stg-body" id="r1-s1-body">
-          <div class="row"><label id="r1-s1-lb">Pickup I (400kV, A)</label><input type="number" id="r1-s1-ip" value="2000" step="1"></div>
-          <div class="row"><label>TMS</label><input type="number" id="r1-s1-tms" value="0.8" step="0.05"></div>
-          <div class="row"><label>Curve</label><select id="r1-s1-ct"><option value="EI" selected>IEC EI</option><option value="VI">IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
-        </div>
-        <div class="stg-hdr"><span>Stage 2 - IDMT</span><input type="checkbox" id="r1-s2-en" onchange="toggleStage('r1-s2-body',this)"></div>
-        <div class="stg-body hidden" id="r1-s2-body">
-          <div class="row"><label id="r1-s2-lb">Pickup I (400kV, A)</label><input type="number" id="r1-s2-ip" value="10" step="0.1"></div>
-          <div class="row"><label>TMS</label><input type="number" id="r1-s2-tms" value="0.85" step="0.05"></div>
-          <div class="row"><label>Curve</label><select id="r1-s2-ct"><option value="EI" selected>IEC EI</option><option value="VI">IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
-        </div>
-        <div class="stg-hdr"><span>Stage 2 - DT</span><input type="checkbox" id="r1-dt-en" checked onchange="toggleStage('r1-dt-body',this)"></div>
-        <div class="stg-body" id="r1-dt-body">
-          <div class="row"><label id="r1-dt-lb">Pickup I (400kV, A)</label><input type="number" id="r1-dt-ip" value="13000" step="1"></div>
-          <div class="row"><label>td (s)</label><input type="number" id="r1-dt-td" value="0.3" step="0.01"></div>
-        </div>
-      </div>
-    </div>
+    <div id="relay-cards"></div>
 
-    <!-- Relay 2 -->
-    <div class="relay-card">
-      <div class="relay-hdr" onclick="toggleRelay(2)">
-        <span class="chevron" id="chv2">&#9654;</span>
-        <span class="rdot" style="background:#c0392b"></span>
-        <input class="rname" type="text" id="r2-name" value="Relay 2" onclick="event.stopPropagation()" oninput="render()">
-        <input type="checkbox" id="r2-en" onclick="event.stopPropagation()" onchange="render()">
-      </div>
-      <div class="relay-body collapsed" id="rb2">
-        <div class="stg-hdr"><span>Stage 1 - IDMT</span><input type="checkbox" id="r2-s1-en" checked onchange="toggleStage('r2-s1-body',this)"></div>
-        <div class="stg-body" id="r2-s1-body">
-          <div class="row"><label id="r2-s1-lb">Pickup I (400kV, A)</label><input type="number" id="r2-s1-ip" value="1000" step="0.1"></div>
-          <div class="row"><label>TMS</label><input type="number" id="r2-s1-tms" value="0.8" step="0.05"></div>
-          <div class="row"><label>Curve</label><select id="r2-s1-ct"><option value="EI">IEC EI</option><option value="VI" selected>IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
-        </div>
-        <div class="stg-hdr"><span>Stage 2 - IDMT</span><input type="checkbox" id="r2-s2-en" onchange="toggleStage('r2-s2-body',this)"></div>
-        <div class="stg-body hidden" id="r2-s2-body">
-          <div class="row"><label id="r2-s2-lb">Pickup I (400kV, A)</label><input type="number" id="r2-s2-ip" value="10" step="0.1"></div>
-          <div class="row"><label>TMS</label><input type="number" id="r2-s2-tms" value="0.85" step="0.05"></div>
-          <div class="row"><label>Curve</label><select id="r2-s2-ct"><option value="EI" selected>IEC EI</option><option value="VI">IEC VI</option><option value="SI">IEC SI</option><option value="LTI">IEC LTI</option></select></div>
-        </div>
-        <div class="stg-hdr"><span>Stage 2 - DT</span><input type="checkbox" id="r2-dt-en" checked onchange="toggleStage('r2-dt-body',this)"></div>
-        <div class="stg-body" id="r2-dt-body">
-          <div class="row"><label id="r2-dt-lb">Pickup I (400kV, A)</label><input type="number" id="r2-dt-ip" value="6000" step="1"></div>
-          <div class="row"><label>Td (s)</label><input type="number" id="r2-dt-td" value="0.08" step="0.01"></div>
-        </div>
-      </div>
-    </div>
+    <div id="custom-cards"></div>
 
-    <!-- Custom Device -->
-    <div class="relay-card">
-      <div class="relay-hdr" onclick="toggleCD(0)">
-        <span class="chevron" id="cdchv0">&#9654;</span>
-        <span class="rdot" id="cd0-dot" style="background:#27ae60"></span>
-        <input class="rname" type="text" id="cd0-name" value="Custom 1" onclick="event.stopPropagation()" oninput="render()">
-        <input type="checkbox" id="cd0-en" onclick="event.stopPropagation()" onchange="render()">
-      </div>
-      <div class="cd-body collapsed" id="cdb0">
-        <div class="cd-row" style="padding:6px 0 4px;">
-          <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
-          <input type="color" id="cd0-color" value="#27ae60" onchange="window._cdColorChange(0,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
-          <button class="cd-edit-btn" onclick="window.openCDModal(0)">&#9998; Edit Points</button>
-          <span class="cd-ptcount" id="cd0-ptcount">0 pts</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- Custom 2 -->
-    <div class="relay-card">
-      <div class="relay-hdr" onclick="toggleCD(1)">
-        <span class="chevron" id="cdchv1">&#9654;</span>
-        <span class="rdot" id="cd1-dot" style="background:#e67e22"></span>
-        <input class="rname" type="text" id="cd1-name" value="Custom 2" onclick="event.stopPropagation()" oninput="render()">
-        <input type="checkbox" id="cd1-en" onclick="event.stopPropagation()" onchange="render()">
-      </div>
-      <div class="cd-body collapsed" id="cdb1">
-        <div class="cd-row" style="padding:6px 0 4px;">
-          <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
-          <input type="color" id="cd1-color" value="#e67e22" onchange="window._cdColorChange(1,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
-          <button class="cd-edit-btn" onclick="window.openCDModal(1)">&#9998; Edit Points</button>
-          <span class="cd-ptcount" id="cd1-ptcount">0 pts</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Custom 3 -->
-    <div class="relay-card">
-      <div class="relay-hdr" onclick="toggleCD(2)">
-        <span class="chevron" id="cdchv2">&#9654;</span>
-        <span class="rdot" id="cd2-dot" style="background:#8e44ad"></span>
-        <input class="rname" type="text" id="cd2-name" value="Custom 3" onclick="event.stopPropagation()" oninput="render()">
-        <input type="checkbox" id="cd2-en" onclick="event.stopPropagation()" onchange="render()">
-      </div>
-      <div class="cd-body collapsed" id="cdb2">
-        <div class="cd-row" style="padding:6px 0 4px;">
-          <label style="font-size:11px;color:#444;flex-shrink:0;">Color</label>
-          <input type="color" id="cd2-color" value="#8e44ad" onchange="window._cdColorChange(2,this.value)" style="width:32px;height:22px;border:1px solid #bbb;border-radius:3px;padding:1px;cursor:pointer;flex-shrink:0;">
-          <button class="cd-edit-btn" onclick="window.openCDModal(2)">&#9998; Edit Points</button>
-          <span class="cd-ptcount" id="cd2-ptcount">0 pts</span>
-        </div>
-      </div>
-    </div>
 
     <!-- Fault Levels -->
     <div class="relay-card">
@@ -506,11 +400,12 @@
   import './src/chart/plugins.js';
   import { render, zoomState, resetZoom } from './src/chart/render.js';
   import { addFL, removeFL, renderFLList, updateFL } from './src/ui/fault-levels.js';
-  import { faultLevels }                   from './src/state.js';
+  import { faultLevels, relays }           from './src/state.js';
   import { exportPNG }                     from './src/ui/export.js';
   import { exportXLSX }                   from './src/ui/export-excel.js';
   import { exportReport }                  from './src/ui/export-report.js';
   import { saveSession, loadSession }      from './src/ui/session.js';
+  import { renderRelaySidebar, renderCustomSidebar } from './src/ui/sidebar.js';
   import {
     openCDModal, closeCDModal, saveCDModal,
     cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard, cdClearAll
@@ -534,6 +429,18 @@
   window.cdPasteClipboard = cdPasteClipboard;
   window.cdClearAll       = cdClearAll;
   window.updateFL         = updateFL;
+
+  // Relay state handlers: update relays[] BEFORE render() reads it
+  window._rName = (i, v)         => { relays[i].name       = v; window.render(); };
+  window._rEn   = (i, v)         => { relays[i].en         = v; window.render(); };
+  window._stg   = (i, stg, k, v) => { relays[i][stg][k]   = v; window.render(); };
+  window._stgEn = (i, stg, cb)   => {
+    relays[i][stg].en = cb.checked;
+    const body = document.getElementById('r' + (i + 1) + '-' + stg + '-body');
+    if (body) body.classList.toggle('hidden', !cb.checked);
+    window.render();
+  };
+  window.renderRelaySidebar = renderRelaySidebar;
 
   // Sync dot colour when colour picker changes
   window._cdColorChange = function(idx, val) {
@@ -581,10 +488,10 @@
     window.render();
   };
 
-  document.querySelectorAll('input[type=number], select').forEach(el => {
-    el.addEventListener('change', function(){ window.render(); });
-    el.addEventListener('input',  function(){ window.render(); });
-  });
+  // Sidebar delegation: catches TDC and other non-relay numeric inputs
+  const _sb = document.getElementById('sidebar');
+  _sb.addEventListener('change', e => { if (e.target.matches('input[type=number],select')) window.render(); });
+  _sb.addEventListener('input',  e => { if (e.target.matches('input[type=number],select')) window.render(); });
 
 
   // Zoom toolbar
@@ -684,6 +591,8 @@
   });
 
   window.addEventListener('resize', render);
+  renderRelaySidebar();
+  renderCustomSidebar();
   renderFLList();
   render();
 </script>
