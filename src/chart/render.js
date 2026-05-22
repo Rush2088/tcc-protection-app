@@ -105,7 +105,7 @@ export function render() {
         if (fl.en === false || !fl.a) return;
         if (fl.a < x.min || fl.a > x.max) return;
         const px  = x.getPixelForValue(fl.a);
-        const kA  = (fl.a / 1000).toFixed(fl.a < 100 ? 2 : fl.a < 1000 ? 1 : 0);
+        const kA  = (fl.a / 1000).toFixed(1);
         const lbl = (fl.label || ('FL' + (i + 1))) + '  ' + kA + ' kA';
         entries.push({ px, lbl, col: FL_COLORS[i % FL_COLORS.length] });
       });
