@@ -2,7 +2,7 @@ import { build }                                     from '../engine/dataset.js'
 import { xTicks, yTicks, X_LABEL, Y_LABEL, fmtKA }  from './ticks.js';
 import { getRelays, getBaseV, getShowFull, getXUnit } from '../ui/inputs.js';
 import { getCustomDevices }                          from '../ui/custom-device.js';
-import { faultLevels, thermalCables }               from '../state.js';
+import { faultLevels, thermalCables, thermalTransformers } from '../state.js';
 
 const FL_COLORS = ['#6c3d91','#2e7d32','#00838f','#f57c00','#37474f','#ad1457'];
 
@@ -15,6 +15,13 @@ export function resetZoom() { zoomState.xMin=10; zoomState.xMax=50000; zoomState
 function hexToRgba(hex, a) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${a})`;
+}
+
+function txCategory(mva) {
+  if (mva <= 0.5) return 'I';
+  if (mva <= 5)   return 'II';
+  if (mva <= 30)  return 'III';
+  return 'IV';
 }
 
 export function render() {
@@ -122,6 +129,60 @@ export function render() {
                     pointRadius: 0, showLine: true, tension: 0 });
   });
 
+
+  // TX Thermal Damage datasets
+  thermalTransformers.forEach((tx, i) => {
+    const enEl   = document.getElementById('tx' + i + '-en');
+    const mvaEl  = document.getElementById('tx' + i + '-mva');
+    const iscEl  = document.getElementById('tx' + i + '-isc');
+    const colEl  = document.getElementById('tx' + i + '-color');
+    const nameEl = document.getElementById('tx' + i + '-name');
+    const legEl  = document.getElementById('leg-tx' + i);
+    const legNm  = document.getElementById('leg-tx' + i + '-name');
+    const legLn  = legEl ? legEl.querySelector('line') : null;
+    const freqEl = document.getElementById('tx' + i + '-freq');
+    const en       = enEl   ? enEl.checked                        : tx.en;
+    const mva      = mvaEl  ? (parseFloat(mvaEl.value)  || tx.mva) : tx.mva;
+    const isc      = iscEl  ? (parseFloat(iscEl.value)  || tx.isc) : tx.isc;
+    const col      = colEl  ? colEl.value                         : tx.color;
+    const nm       = nameEl ? nameEl.value                        : tx.name;
+    const showFreq = freqEl ? freqEl.checked                      : tx.showFreq;
+    if (legEl) legEl.style.display = en ? '' : 'none';
+    if (legNm) legNm.textContent   = nm;
+    if (legLn) legLn.setAttribute('stroke', col);
+    if (!en || isc <= 0) return;
+    const IscA   = isc * 1000;
+    const K1     = IscA * IscA * 5;
+    const K2     = IscA * IscA * 2;
+    const cat    = txCategory(mva);
+    const brkPct = cat === 'II' ? 0.70 : 0.50;
+    const IbrkA  = brkPct * IscA;
+    const IMinA  = zoomState.xMin;
+    const IMaxA  = Math.min(IscA, zoomState.xMax);
+    if (IMaxA <= IMinA) return;
+    const N = 120;
+    const ptsT = [];
+    for (let j = 0; j <= N; j++) {
+      const I = Math.exp(Math.log(IMinA) + (Math.log(IMaxA) - Math.log(IMinA)) * j / N);
+      const t = K1 / (I * I);
+      if (t > 0 && isFinite(t)) ptsT.push({ x: I, y: t });
+    }
+    if (ptsT.length >= 2)
+      datasets.push({ data: ptsT, borderColor: col, borderWidth: 2.5,
+                      borderDash: [5, 3], pointRadius: 0, showLine: true, tension: 0 });
+    if (showFreq && cat !== 'I') {
+      const ptsM = [];
+      for (let j = 0; j <= N; j++) {
+        const I = Math.exp(Math.log(IMinA) + (Math.log(IMaxA) - Math.log(IMinA)) * j / N);
+        const t = (I <= IbrkA) ? K1 / (I * I) : K2 / (I * I);
+        if (t > 0 && isFinite(t)) ptsM.push({ x: I, y: t });
+      }
+      if (ptsM.length >= 2)
+        datasets.push({ data: ptsM, borderColor: col, borderWidth: 1.5,
+                        borderDash: [2, 2], pointRadius: 0, showLine: true, tension: 0 });
+    }
+  });
+
   } // end tdcParentEn
 
   // FL vertical lines drawn in flLabelPlugin (canvas clip keeps them within plot area)
@@ -210,6 +271,38 @@ export function render() {
           ctx.fillStyle = col;
           ctx.textAlign = 'left';
           // draw small background rectangle for readability
+          const tw = ctx.measureText(nm).width;
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.fillRect(lpx - tw - 10, lpy - 10, tw + 6, 13);
+          ctx.fillStyle = col;
+          ctx.textAlign = 'right';
+          ctx.fillText(nm, lpx - 4, lpy);
+          ctx.restore();
+        });
+      }
+      // TX annotations
+      if (window.tdcParentEn !== false) {
+        thermalTransformers.forEach((tx, i) => {
+          const enEl   = document.getElementById('tx' + i + '-en');
+          const iscEl  = document.getElementById('tx' + i + '-isc');
+          const colEl  = document.getElementById('tx' + i + '-color');
+          const nameEl = document.getElementById('tx' + i + '-name');
+          const en  = enEl   ? enEl.checked                       : tx.en;
+          const isc = iscEl  ? (parseFloat(iscEl.value) || tx.isc) : tx.isc;
+          const col = colEl  ? colEl.value                        : tx.color;
+          const nm  = nameEl ? nameEl.value                       : tx.name;
+          if (!en || isc <= 0) return;
+          const IscA   = isc * 1000;
+          const K1     = IscA * IscA * 5;
+          const labelI = Math.min(IscA, x.max);
+          if (labelI < x.min) return;
+          const t = K1 / (labelI * labelI);
+          if (!isFinite(t) || t <= 0) return;
+          const lpx = x.getPixelForValue(labelI);
+          const lpy = y.getPixelForValue(t);
+          if (lpx < ca.left || lpx > ca.right || lpy < ca.top || lpy > ca.bottom) return;
+          ctx.save();
+          ctx.font = 'bold 9px Arial';
           const tw = ctx.measureText(nm).width;
           ctx.fillStyle = 'rgba(255,255,255,0.75)';
           ctx.fillRect(lpx - tw - 10, lpy - 10, tw + 6, 13);

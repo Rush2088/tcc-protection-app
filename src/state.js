@@ -26,3 +26,7 @@ export const thermalCables = [
   { name: 'Cable 1', en: false, color: '#795548', area: 95 },
   { name: 'Cable 2', en: false, color: '#607d8b', area: 50 }
 ];
+
+export const thermalTransformers = [
+  { name: 'TX 1', en: false, color: '#e91e63', mva: 5, isc: 20, showFreq: false }
+];

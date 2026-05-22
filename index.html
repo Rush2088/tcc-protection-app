@@ -265,6 +265,27 @@
           <div class="row"><label>I min (kA)</label><input type="number" id="tdc-imin" value="1" min="0.001" step="0.1"></div>
           <div class="row"><label>I max (kA)</label><input type="number" id="tdc-imax" value="20" min="0.1" step="1"></div>
         </div>
+        <div style="padding:3px 10px 2px;background:#f0f0f0;border-top:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0;">
+          <span style="font-size:10px;font-weight:600;text-transform:uppercase;color:#888;letter-spacing:.04em;">Transformer</span>
+        </div>
+        <div style="padding:4px 8px 6px;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+            <span class="rdot" id="tx0-dot" style="background:#e91e63"></span>
+            <input class="rname" type="text" id="tx0-name" value="TX 1"
+              onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input type="checkbox" id="tx0-en" onclick="event.stopPropagation()" onchange="window.render()">
+            <input type="color" id="tx0-color" value="#e91e63"
+              onchange="document.getElementById('tx0-dot').style.background=this.value;window.render()"
+              style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+          </div>
+          <div class="row"><label>Rating (MVA)</label><input type="number" id="tx0-mva" value="5" min="0.001" step="1" oninput="window._txBadge()"></div>
+          <div class="row"><label>Fault level (kA)</label><input type="number" id="tx0-isc" value="20" min="0.01" step="0.1"></div>
+          <span id="tx0-badge" style="display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;margin-top:4px;margin-bottom:2px;background:#e3f2fd;color:#1565c0;border:0.5px solid #90caf9;">Cat II</span>
+          <div id="tx0-freq-row" style="display:flex;align-items:center;gap:5px;margin-top:3px;">
+            <input type="checkbox" id="tx0-freq" onclick="event.stopPropagation()" onchange="window.render()">
+            <label for="tx0-freq" style="font-size:11px;color:#666;">Show mechanical boundary</label>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -310,7 +331,11 @@
       <div class="leg-item" id="leg-tdc1" style="display:none;">
         <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#607d8b" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
         <span id="leg-tdc1-name">Cable 2</span>
+        <div class="leg-item" id="leg-tx0" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e91e63" stroke-width="2.5" stroke-dasharray="5 3"/></svg>
+        <span id="leg-tx0-name">TX 1</span>
       </div>
+    </div>
     </div>
     <div id="chartWrap">
       <canvas id="tcc"></canvas>
@@ -581,6 +606,32 @@
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.mb-item')) window.closeMenus();
   });
+
+  window._txBadge = function() {
+    const mva = parseFloat((document.getElementById('tx0-mva') || {}).value) || 0;
+    const badge = document.getElementById('tx0-badge');
+    const freqRow = document.getElementById('tx0-freq-row');
+    if (!badge) return;
+    let cat;
+    if (mva <= 0.5)     cat = 'I';
+    else if (mva <= 5)  cat = 'II';
+    else if (mva <= 30) cat = 'III';
+    else                cat = 'IV';
+    if (cat === 'I') {
+      badge.textContent = 'Cat I - thermal only';
+      badge.style.background = '#f5f5f5';
+      badge.style.color = '#888';
+      badge.style.borderColor = '#ddd';
+      if (freqRow) freqRow.style.display = 'none';
+    } else {
+      badge.textContent = 'Cat ' + cat + ' - dual-segment';
+      badge.style.background = '#e3f2fd';
+      badge.style.color = '#1565c0';
+      badge.style.borderColor = '#90caf9';
+      if (freqRow) freqRow.style.display = 'flex';
+    }
+    window.render();
+  };
 
   // FL parent enable state
   window.flParentEn = true;
