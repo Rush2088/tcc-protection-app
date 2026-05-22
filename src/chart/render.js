@@ -294,7 +294,7 @@ export function render() {
           if (!en || isc <= 0) return;
           const IscA   = isc * 1000;
           const K1     = IscA * IscA * 5;
-          const labelI = Math.min(IscA, x.max);
+          const labelI = Math.min(IscA * Math.sqrt(10), x.max);
           if (labelI < x.min) return;
           const t = K1 / (labelI * labelI);
           if (!isFinite(t) || t <= 0) return;
