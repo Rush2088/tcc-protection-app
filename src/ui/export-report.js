@@ -35,26 +35,28 @@ function legendItems() {
   return items;
 }
 
-const domVal = id => { const e = document.getElementById(id); return e ? e.value   : ''; };
+const domVal   = id => { const e = document.getElementById(id); return e ? e.value   : ''; };
+const domProj  = ()  => domVal('projName') || 'TCC Protection Coordination Study';
+const domBaseV = ()  => domVal('baseV') || '?';
 const domChk = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 
 // ---- Page 1: Landscape - TCC Chart ------------------------------------------
 function addChartPage(doc) {
   const PW = doc.internal.pageSize.getWidth();
   const PH = doc.internal.pageSize.getHeight();
-  const bv = domVal('baseV') || '?';
+  const proj = domProj();
+  const bv   = domBaseV();
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(26, 58, 92);
-  doc.text('TCC Protection Coordination Study', MAR, MAR);
+  doc.text(proj, MAR, MAR);
 
+  const dateStr = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(90, 90, 90);
-  doc.text('Base Voltage: ' + bv + ' kV', MAR, MAR + 6);
-
-  const dateStr = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
+  doc.text('Base: ' + bv + ' kV', MAR, MAR + 6);
   doc.text(dateStr, PW - MAR, MAR, { align: 'right' });
 
   doc.setDrawColor(200, 210, 220);
@@ -171,19 +173,20 @@ function drawCDBox(doc, cd, bx, by, bw) {
 function addSettingsPage(doc) {
   doc.addPage([297, 210], 'landscape');
   const PW = 297;
-  const bv = parseFloat(domVal('baseV')) || 0.4;
+  const bv   = domBaseV();
+  const proj = domProj();
   let y = MAR;
 
   // Page header
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(26, 58, 92);
-  doc.text('Protection Settings', MAR, y);
+  doc.text(proj + ' — Protection Settings', MAR, y);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
-  doc.text('Base Voltage: ' + bv + ' kV', PW - MAR, y, { align: 'right' });
+  doc.text('Base: ' + bv + ' kV', PW - MAR, y, { align: 'right' });
   y += 5;
   doc.setDrawColor(180, 195, 210); doc.setLineWidth(0.4);
   doc.line(MAR, y, PW - MAR, y);
@@ -236,5 +239,5 @@ export function exportReport() {
   const doc   = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   addChartPage(doc);
   addSettingsPage(doc);
-  doc.save('TCC_Report_' + (domVal('baseV') || '33') + 'kV.pdf');
+  doc.save('TCC_' + domProj().replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf');
 }

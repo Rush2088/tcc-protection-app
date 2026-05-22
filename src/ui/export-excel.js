@@ -125,6 +125,11 @@ export function exportXLSX() {
   if (!window.XLSX) { alert('SheetJS not loaded.'); return; }
   const XLSX = window.XLSX;
 
+  const projEl  = document.getElementById('projName');
+  const bvEl    = document.getElementById('baseV');
+  const project = projEl ? projEl.value.trim() : 'TCC Study';
+  const baseV   = bvEl   ? bvEl.value.trim()   : '?';
+
   const relays = getRelays().filter(r => r.en);
   const cds    = getCustomDevices().filter(cd => cd.en && cd.points.length >= 2);
   const fls    = faultLevels.filter(fl => fl.en !== false);
@@ -135,17 +140,20 @@ export function exportXLSX() {
   ];
 
   const COL_STRIDE = 3;
-  const HEADER_ROWS = 3;
+  const HEADER_ROWS = 4;   // row 0 = project title, row 1 = device name, row 2 = blank, row 3 = col headers
   const maxRows = sections.length ? Math.max(...sections.map(s => s.pts.length)) : 0;
   const totalCols = Math.max(4, sections.length * COL_STRIDE);
   const aoa = [];
   for (let r = 0; r < HEADER_ROWS + maxRows; r++) aoa.push(new Array(totalCols).fill(null));
 
+  // Row 0: project + base voltage info (spans first columns)
+  aoa[0][0] = project + '  |  Base: ' + baseV + ' kV';
+
   sections.forEach((sec, si) => {
     const col = si * COL_STRIDE;
-    aoa[0][col]     = sec.title;
-    aoa[2][col]     = 'Current (A)';
-    aoa[2][col + 1] = 'Time (s)';
+    aoa[1][col]     = sec.title;
+    aoa[3][col]     = 'Current (A)';
+    aoa[3][col + 1] = 'Time (s)';
     sec.pts.forEach((p, ri) => {
       aoa[HEADER_ROWS + ri][col]     = p.x;
       aoa[HEADER_ROWS + ri][col + 1] = p.y;
@@ -173,7 +181,7 @@ export function exportXLSX() {
   while (aoa.length < flStartRow + 2 + fls.length) aoa.push(new Array(totalCols).fill(null));
   aoa.forEach(row => { while (row.length < flCols) row.push(null); });
 
-  aoa[flStartRow][0] = 'Fault Level Operate Times';
+  aoa[flStartRow][0] = 'Fault Level Operate Times  (' + project + ')';
   const flHdr = aoa[flStartRow + 1];
   flHdr[0] = 'Fault Level';
   flHdr[1] = 'Current (A)';
@@ -199,5 +207,5 @@ export function exportXLSX() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'TCC Data');
-  XLSX.writeFile(wb, 'TCC_Curves.xlsx');
+  XLSX.writeFile(wb, 'TCC_' + project.replace(/[^a-zA-Z0-9_-]/g, '_') + '.xlsx');
 }

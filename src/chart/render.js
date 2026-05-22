@@ -89,28 +89,17 @@ export function render() {
     if (lineEl) lineEl.setAttribute('stroke', cd.color);
   });
 
-  // ── Fault level vertical lines (as datasets — avoids plugin module-instance issues) ──
-  if (window.flParentEn !== false) {
-    faultLevels.forEach((fl, idx) => {
-      if (fl.en === false || !fl.a) return;
-      const col = FL_COLORS[idx % FL_COLORS.length];
-      datasets.push({
-        data: [{ x: fl.a, y: zoomState.yMin * 0.5 }, { x: fl.a, y: zoomState.yMax * 2 }],
-        borderColor: col, borderWidth: 1.5, borderDash: [6, 3],
-        pointRadius: 0, showLine: true, tension: 0
-      });
-    });
-  }
+  // FL vertical lines drawn in flLabelPlugin (canvas clip keeps them within plot area)
 
   // Local plugin: draw FL labels at top — stagger labels that are horizontally close
   const flLabelPlugin = {
     id: 'flLabel',
     afterDraw(ch) {
       if (window.flParentEn === false) return;
-      const { ctx, scales: { x, y } } = ch;
-      if (!x || !y) return;
+      const { ctx, scales: { x, y }, chartArea: ca } = ch;
+      if (!x || !y || !ca) return;
 
-      // Collect active FL entries with pixel position
+      // Collect active FL entries within the visible x range
       const entries = [];
       faultLevels.forEach((fl, i) => {
         if (fl.en === false || !fl.a) return;
@@ -123,10 +112,27 @@ export function render() {
 
       if (!entries.length) return;
 
+      // ── Draw vertical lines clipped to the chart plot area ──────────────────
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(ca.left, ca.top, ca.right - ca.left, ca.bottom - ca.top);
+      ctx.clip();
+      entries.forEach(({ px, col }) => {
+        ctx.beginPath();
+        ctx.setLineDash([6, 3]);
+        ctx.strokeStyle = col;
+        ctx.lineWidth   = 1.5;
+        ctx.moveTo(px, ca.top);
+        ctx.lineTo(px, ca.bottom);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // ── Draw labels above the chart area (no clip needed) ───────────────────
       // Sort by x position and assign stagger levels so overlapping labels stack vertically
       entries.sort((a, b) => a.px - b.px);
       ctx.font = 'bold 10px Arial';
-      const levelRight = [];  // rightmost x+width used per level
+      const levelRight = [];
       entries.forEach(e => {
         const w = ctx.measureText(e.lbl).width;
         let lv = 0;
@@ -139,7 +145,7 @@ export function render() {
       ctx.textAlign = 'left';
       entries.forEach(({ px, lbl, col, level }) => {
         ctx.fillStyle = col;
-        ctx.fillText(lbl, px + 5, y.top + 14 + level * 14);
+        ctx.fillText(lbl, px + 5, ca.top + 14 + level * 14);
       });
       ctx.restore();
     }

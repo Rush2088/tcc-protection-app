@@ -15,7 +15,7 @@ function getRelay(n) {
 }
 
 export function getRelays()   { return [getRelay(1), getRelay(2)]; }
-export function getBaseV()    { return parseFloat(document.getElementById('baseV').value) || 33; }
+export function getBaseV()    { return parseFloat(document.getElementById('baseV').value) || 0.4; }
 export function getShowFull() { return document.getElementById('showFull').checked; }
 
 export function getXUnit() { const el = document.getElementById('xUnit'); return el ? el.value : 'kA'; }

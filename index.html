@@ -206,8 +206,9 @@
 <div id="main">
   <div id="sidebar">
     <div class="card">
-      <h4>Base Voltage</h4>
-      <div class="row"><label>Base (kV)</label><input type="number" id="baseV" value="0.4" step="0.001"></div>
+      <h4>Info</h4>
+      <div class="row"><label>Project</label><input type="text" id="projName" value="Sample Proj - TCC" maxlength="25" style="width:9em;font-size:11px;"></div>
+      <div class="row"><label>Base Vol.</label><input type="text" id="baseV" value="0.4" maxlength="5" style="width:3.5em;"><span style="margin-left:3px;font-size:11px;color:#555">kV</span></div>
     </div>
 
     <!-- Relay 1 -->
@@ -355,7 +356,7 @@
   <div class="stt-dialog">
     <div class="stt-hdr"><span>Settings</span><span class="close" onclick="window.closeSettings()">&#x2715;</span></div>
     <div class="stt-body">
-      <div class="stt-row"><label>Base Voltage (kV)</label><input type="number" id="stt-baseV" step="0.001" min="0.001"></div>
+      <div class="stt-row"><label>Base Voltage (kV)</label><input type="text" id="stt-baseV" maxlength="5"></div>
       <hr class="stt-sep">
       <div class="stt-row"><label>Current Axis Unit</label><select id="stt-xUnit"><option value="kA">kA</option><option value="A">A</option></select></div>
       <div class="stt-row"><label>Current Axis Min (A)</label><input type="number" id="stt-xMin" step="1" min="1"></div>

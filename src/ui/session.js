@@ -50,8 +50,9 @@ function setStageVisible(id, show) {
 // ─── Save ────────────────────────────────────────────────────────────────────
 export function saveSession() {
   const data = {
-    version: 1,
-    baseV:   parseFloat(gVal('baseV')) || 0.4,
+    version:  1,
+    project:  gVal('projName') || 'Sample Proj - TCC',
+    baseV:    gVal('baseV') || '0.4',
     relays:  [getRelayData(1), getRelayData(2)],
     customDevices: customDevices.map((cd, i) => ({
       name:   gVal('cd' + i + '-name') || cd.name,
@@ -89,8 +90,9 @@ export function loadSession() {
 }
 
 function applySession(data) {
-  // Base voltage
-  if (data.baseV != null) sVal('baseV', data.baseV);
+  // Info fields
+  if (data.project != null) sVal('projName', data.project);
+  if (data.baseV   != null) sVal('baseV', data.baseV);
 
   // Relays
   (data.relays || []).forEach((r, idx) => setRelayData(idx + 1, r));
