@@ -173,6 +173,9 @@
   <div class="mb-item" id="mb-file">
     <span onclick="window.toggleMenu('file')">File</span>
     <div class="mb-drop">
+      <div class="mb-opt" onclick="window.loadSession();window.closeMenus()">&#128194; Open...</div>
+      <div class="mb-opt" onclick="window.saveSession();window.closeMenus()">&#128190; Save...</div>
+      <div class="mb-sep"></div>
       <div class="mb-opt" onclick="window.exportPNG();window.closeMenus()">Export PNG</div>
       <div class="mb-opt" onclick="window.exportXLSX();window.closeMenus()">Export Excel</div>
     </div>
@@ -430,6 +433,7 @@
   import { faultLevels }                   from './src/state.js';
   import { exportPNG }                     from './src/ui/export.js';
   import { exportXLSX }                   from './src/ui/export-excel.js';
+  import { saveSession, loadSession }      from './src/ui/session.js';
   import {
     openCDModal, closeCDModal, saveCDModal,
     cdAddRow, cdDelRow, cdMoveUp, cdMoveDown, cdPasteClipboard, cdClearAll
@@ -439,6 +443,8 @@
   window.removeFL         = removeFL;
   window.exportPNG        = exportPNG;
   window.exportXLSX       = exportXLSX;
+  window.saveSession      = saveSession;
+  window.loadSession      = loadSession;
   window.faultLevels      = faultLevels;
   window.openCDModal      = openCDModal;
   window.closeCDModal     = closeCDModal;
