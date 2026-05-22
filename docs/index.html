@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protection Coordination - TCC v2</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f2f5; font-family: Arial, sans-serif; font-size: 13px; color: #222; }
+  #header { background: #1a3a5c; color: #fff; padding: 10px 20px; display: flex; align-items: center; justify-content: center; }
+  #header h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+  #main { display: flex; gap: 12px; padding: 12px; height: calc(100vh - 68px); }
+  #sidebar { width: 252px; min-width: 220px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+  .card { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 10px 12px; }
+  .card h4 { font-size: 10px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 0.5px solid #e0e0e0; padding-bottom: 5px; }
+  .row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .row label { font-size: 11px; color: #444; min-width: 90px; line-height: 1.3; }
+  .row input[type=number] { flex: 1; padding: 3px 5px; border: 1px solid #bbb; border-radius: 4px; font-size: 12px; background: #fff; color: #222; min-width: 0; }
+  .row input[type=number]:focus { outline: none; border-color: #1a3a5c; }
+  .row select { flex: 1; padding: 3px 5px; border: 1px solid #bbb; border-radius: 4px; font-size: 12px; background: #fff; color: #222; }
+  .relay-card { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; overflow: hidden; }
+  .relay-hdr  { display: flex; align-items: center; gap: 6px; padding: 8px 10px; cursor: pointer; background: #f7f8fa; border-bottom: 0.5px solid #e0e0e0; user-select: none; }
+  .relay-hdr:hover { background: #edf0f3; }
+  .chevron { font-size: 9px; color: #999; width: 10px; flex-shrink: 0; }
+  .rdot    { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .rname   { flex: 1; border: none; background: transparent; font-size: 12px; font-weight: 600; color: #222; cursor: text; padding: 0; min-width: 0; }
+  .rname:focus { outline: 1px solid #ccc; border-radius: 3px; padding: 0 2px; }
+  .relay-body { padding: 4px 10px 8px; }
+  .relay-body.collapsed { display: none; }
+  .stg-hdr { display: flex; align-items: center; justify-content: space-between; padding: 6px 0 2px; margin-top: 5px; border-top: 0.5px solid #ebebeb; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.4px; }
+  .stg-hdr:first-of-type { border-top: none; margin-top: 2px; }
+  .stg-body { padding-top: 3px; }
+  .stg-body.hidden { display: none; }
+  #chart-area { flex: 1; background: #fff; border-radius: 8px; border: 0.5px solid #ccc; display: flex; flex-direction: column; padding: 12px; min-width: 0; }
+  /* legend CSS consolidated into #zoom-toolbar block above */
+  .leg-item  { display: flex; align-items: center; gap: 5px; }
+  .leg-check { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; color: #888; }
+  #chartWrap { position: relative; flex: 1; min-height: 0; }
+  #chartWrap canvas { display: block; }
+  #exportBtn, #exportXlsBtn, #exportRptBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  #exportBtn:hover, #exportXlsBtn:hover, #exportRptBtn:hover { background: #274f7a; }
+  .fl-row { display: flex; align-items: center; gap: 4px; width: 100%; }
+  .fl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .fl-lbl { font-size: 11px; padding: 2px 4px; border: 1px solid #bbb; border-radius: 4px; flex: 1; min-width: 0; }
+  .fl-val { font-size: 11px; padding: 2px 5px; border: 1px solid #bbb; border-radius: 4px; flex: 1; min-width: 0; -moz-appearance: textfield; }
+  .fl-val::-webkit-inner-spin-button, .fl-val::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .fl-op  { font-size: 10px; padding: 2px 3px; border: 1px solid #ddd; border-radius: 4px; width: 52px; background: #fafafa; text-align: right; }
+  .fl-entry { margin-bottom: 6px; }
+  .fl-times { display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; padding-left: 18px; margin-top: 3px; }
+  .fl-t-header { font-size: 9px; font-weight: 700; color: #555; white-space: nowrap; margin-right: 6px; }
+  .fl-t-pair { display: inline-flex; align-items: center; gap: 3px; }
+  .fl-t-lbl { font-size: 9px; font-weight: 600; white-space: nowrap; }
+  .fl-t-val { font-size: 9px; font-weight: 500; white-space: nowrap; background: #fafafa; border: 1px solid #ddd; border-radius: 3px; padding: 1px 4px; }
+  .fl-ilbl { font-size: 10px; color: #888; white-space: nowrap; }
+  .fl-del { padding: 1px 5px; background: #c0392b18; color: #c0392b; border: 1px solid #c0392b55; border-radius: 3px; cursor: pointer; font-size: 11px; }
+  .fl-add { padding: 4px 10px; background: #1a3a5c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; width: 100%; }
+
+  /* Custom Device card */
+  .cd-body { padding: 6px 10px 8px; }
+  .cd-body.collapsed { display: none; }
+  .cd-row { display: flex; align-items: center; gap: 6px; }
+  .cd-edit-btn { flex: 1; padding: 4px 8px; background: #f0f4f8; border: 1px solid #bbb; border-radius: 4px; cursor: pointer; font-size: 12px; text-align: left; }
+  .cd-edit-btn:hover { background: #ddeeff; }
+  .cd-ptcount { font-size: 10px; color: #888; white-space: nowrap; }
+
+  /* Modal */
+  #cd-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.45); z-index: 1000;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+  }
+  .cd-dialog {
+    background: #f5f5f5; border: 1px solid #aaa; border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35); width: 360px; overflow: hidden;
+  }
+  .cd-dlg-hdr {
+    background: #3c5a8a; color: #fff; padding: 8px 12px;
+    font-size: 13px; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cd-dlg-hdr .close { cursor: pointer; font-size: 16px; line-height: 1; opacity: 0.8; }
+  .cd-dlg-hdr .close:hover { opacity: 1; }
+  .cd-toolbar { background: #e8e8e8; padding: 5px 8px; display: flex; gap: 5px; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
+  .cd-tbtn { padding: 4px 9px; border: 1px solid #aaa; border-radius: 3px; background: #fff; cursor: pointer; font-size: 12px; }
+  .cd-tbtn:hover { background: #ddeeff; border-color: #3c5a8a; }
+  #cd-tbl-wrap { height: 280px; overflow-y: auto; background: #fff; }
+  #cd-table { width: 100%; border-collapse: collapse; }
+  #cd-table th { background: #e0e5ee; font-size: 11px; padding: 5px 8px; text-align: left; border-bottom: 1px solid #ccc; position: sticky; top: 0; z-index: 1; }
+  #cd-table td { padding: 2px 4px; border-bottom: 1px solid #f0f0f0; }
+  .cd-inp { width: 100%; padding: 2px 4px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; -moz-appearance: textfield; }
+  .cd-inp::-webkit-inner-spin-button, .cd-inp::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .cd-inp:focus { outline: none; border-color: #3c5a8a; background: #f0f6ff; }
+  .cd-dlg-ftr { padding: 8px 12px; border-top: 1px solid #ccc; display: flex; justify-content: flex-end; gap: 8px; }
+  .cd-btn { padding: 5px 16px; border-radius: 4px; border: 1px solid #aaa; cursor: pointer; font-size: 12px; }
+  .cd-btn-ok { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  .cd-btn-ok:hover { background: #274f7a; }
+
+  /* Export Excel + Help buttons */
+  #exportXlsBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  #exportXlsBtn:hover { background: #274f7a; }
+
+  /* Help modal */
+  #help-modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.45); z-index: 2000;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+  }
+  #help-modal.open { display: flex; }
+  .help-dialog {
+    background: #fff; border: 1px solid #aaa; border-radius: 8px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.35); width: 480px; overflow: hidden;
+  }
+  .help-dlg-hdr {
+    background: #1a3a5c; color: #fff; padding: 10px 14px;
+    font-size: 13px; font-weight: 600;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .help-dlg-hdr .close { cursor: pointer; font-size: 16px; opacity: 0.8; }
+  .help-dlg-hdr .close:hover { opacity: 1; }
+  .help-body { padding: 16px 18px; font-size: 12px; color: #222; line-height: 1.6; }
+  .help-body h3 { font-size: 12px; color: #1a3a5c; margin: 12px 0 6px; border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; }
+  .help-body .formula { font-family: monospace; font-size: 13px; background: #f0f4f8; border: 1px solid #cce; border-radius: 4px; padding: 6px 10px; margin: 6px 0; display: block; }
+  .help-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
+  .help-table th { background: #e8edf3; padding: 5px 8px; text-align: center; border: 1px solid #ccc; }
+  .help-table td { padding: 4px 8px; border: 1px solid #e0e0e0; text-align: center; }
+  .help-table tr:nth-child(even) td { background: #f9fafb; }
+
+
+  /* App menu bar */
+  #menubar { background: #f0f0f0; border-bottom: 1px solid #ccc; display: flex; align-items: stretch; padding: 0 4px; user-select: none; position: relative; z-index: 500; }
+  .mb-item { position: relative; }
+  .mb-item > span { display: block; padding: 4px 12px; font-size: 12px; color: #222; cursor: default; line-height: 1.6; }
+  .mb-item > span:hover, .mb-item.open > span { background: #1a3a5c; color: #fff; }
+  .mb-drop { display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #bbb; box-shadow: 2px 4px 12px rgba(0,0,0,0.18); min-width: 180px; z-index: 600; }
+  .mb-item.open .mb-drop { display: block; }
+  .mb-opt { padding: 6px 16px; font-size: 12px; color: #222; cursor: pointer; white-space: nowrap; }
+  .mb-opt:hover { background: #1a3a5c; color: #fff; }
+  .mb-sep { border-top: 1px solid #e0e0e0; margin: 3px 0; }
+  .mb-vsep { width: 1px; height: 16px; background: rgba(255,255,255,0.35); margin: 0 6px; align-self: center; }
+  #menubar { align-items: center; }
+
+
+  /* Zoom toolbar */
+  #zoom-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+  .zt-sep { flex: 1; min-width: 8px; max-width: 24px; }
+  .legend { display: flex; gap: 14px; margin-bottom: 6px; font-size: 12px; flex-wrap: wrap; color: #333; align-items: center; justify-content: flex-start; }
+  .zt-btn { padding: 4px 10px; font-size: 11px; border: 1px solid #bbb; border-radius: 4px; background: #f5f5f5; cursor: pointer; white-space: nowrap; }
+  .zt-btn:hover { background: #e0e8f0; border-color: #1a3a5c; }
+  .zt-btn.active { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  #zoom-box { position: absolute; border: 2px solid #1a3a5c; background: rgba(26,58,92,0.08); pointer-events: none; display: none; }
+  #settings-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 2000; align-items: flex-start; justify-content: center; padding-top: 80px; }
+  #settings-modal.open { display: flex; }
+  .stt-dialog { background: #fff; border-radius: 8px; box-shadow: 0 6px 28px rgba(0,0,0,0.3); width: 360px; overflow: hidden; }
+  .stt-hdr { background: #1a3a5c; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .stt-hdr .close { cursor: pointer; font-size: 16px; opacity: 0.8; }
+  .stt-hdr .close:hover { opacity: 1; }
+  .stt-body { padding: 16px 18px; }
+  .stt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .stt-row label { font-size: 12px; color: #444; min-width: 150px; }
+  .stt-row input[type=number], .stt-row select { flex:1; padding: 4px 6px; border: 1px solid #bbb; border-radius: 4px; font-size: 12px; }
+  .stt-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; }
+  .stt-sep { border: none; border-top: 1px solid #e8e8e8; margin: 10px 0; }
+  .stt-ftr { padding: 10px 18px 14px; display: flex; justify-content: flex-end; gap: 8px; }
+  .stt-btn { padding: 6px 18px; border-radius: 4px; border: 1px solid #aaa; cursor: pointer; font-size: 12px; }
+  .stt-btn-ok { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
+  .stt-btn-ok:hover { background: #274f7a; }
+
+</style>
+  <script type="module" crossorigin src="/tcc-protection-app/assets/index.eZQNHhSf.js"></script>
+</head>
+<body>
+<div id="header"><h1>Protection Coordination - TCC</h1></div>
+<div id="menubar">
+  <div class="mb-item" id="mb-file">
+    <span onclick="window.toggleMenu('file')">File</span>
+    <div class="mb-drop">
+      <div class="mb-opt" onclick="window.loadSession();window.closeMenus()">&#128194; Open...</div>
+      <div class="mb-opt" onclick="window.saveSession();window.closeMenus()">&#128190; Save...</div>
+      <div class="mb-sep"></div>
+      <div class="mb-opt" onclick="window.exportPNG();window.closeMenus()">Export PNG</div>
+      <div class="mb-opt" onclick="window.exportXLSX();window.closeMenus()">Export Excel</div>
+      <div class="mb-opt" onclick="window.exportReport();window.closeMenus()">&#128196; Export Report (PDF)</div>
+    </div>
+  </div>
+  <div class="mb-item" id="mb-view">
+    <span onclick="window.toggleMenu('view')">View</span>
+    <div class="mb-drop">
+      <div class="mb-opt" id="mb-fullcurves-opt" onclick="window.toggleFullCurves()">Full Curves: Off</div>
+      <div class="mb-sep"></div>
+      <div class="mb-opt" onclick="window.resetZoomAction();window.closeMenus()">Reset Zoom</div>
+    </div>
+  </div>
+  <div class="mb-item" id="mb-settings">
+    <span onclick="window.toggleMenu('settings')">Settings</span>
+    <div class="mb-drop">
+      <div class="mb-opt" onclick="window.showSettings();window.closeMenus()">Preferences...</div>
+    </div>
+  </div>
+  <div class="mb-item" id="mb-help">
+    <span onclick="window.toggleMenu('help')">Help</span>
+    <div class="mb-drop">
+      <div class="mb-opt" onclick="window.showHelp();window.closeMenus()">IDMT Reference...</div>
+    </div>
+  </div>
+</div>
+<div id="main">
+  <div id="sidebar">
+    <div class="card">
+      <h4>Info</h4>
+      <div class="row"><label>Project</label><input type="text" id="projName" value="Sample Proj - TCC" maxlength="25" style="width:9em;font-size:11px;"></div>
+      <div class="row"><label>Base Voltage</label><input type="text" id="baseV" value="0.4" maxlength="5" style="width:3.5em;"><span style="margin-left:3px;font-size:11px;color:#555">kV</span></div>
+    </div>
+
+    <div id="relay-cards"></div>
+
+    <div id="custom-cards"></div>
+
+
+
+    <!-- Fault Levels -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleFL()">
+        <span class="chevron" id="flchv">&#9654;</span>
+        <span class="rname" style="flex:1;font-weight:600;">Fault Levels</span>
+        <input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart"
+          onchange="window.flParentEn=this.checked;window.render()" onclick="event.stopPropagation()" style="cursor:pointer;">
+      </div>
+      <div class="relay-body collapsed" id="flBody">
+        <div id="flList"></div>
+        <button class="fl-add" onclick="window.addFL()">+ Add Fault Level</button>
+      </div>
+    </div>
+
+    <!-- Thermal Damage Curves -->
+    <div class="relay-card">
+      <div class="relay-hdr" onclick="toggleTDC()">
+        <span class="chevron" id="tdcchv">&#9654;</span>
+        <span class="rname" style="flex:1;font-weight:600;">Thermal Damage</span>
+        <input type="checkbox" id="tdcParentEn" title="Show/hide all thermal damage curves"
+          onclick="event.stopPropagation()" onchange="window.tdcParentEn=this.checked;window.render()" style="cursor:pointer;">
+      </div>
+      <div class="relay-body collapsed" id="tdcBody">
+        <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+            <span class="rdot" id="tdc0-dot" style="background:#795548"></span>
+            <input class="rname" type="text" id="tdc0-name" value="Cable 1" onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input type="checkbox" id="tdc0-en" onclick="event.stopPropagation()" onchange="window.render()">
+            <input type="color" id="tdc0-color" value="#795548" onchange="document.getElementById('tdc0-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+          </div>
+          <div class="row"><label>Area (mm²)</label><input type="number" id="tdc0-area" value="95" min="1" step="1"></div>
+        </div>
+        <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+            <span class="rdot" id="tdc1-dot" style="background:#607d8b"></span>
+            <input class="rname" type="text" id="tdc1-name" value="Cable 2" onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input type="checkbox" id="tdc1-en" onclick="event.stopPropagation()" onchange="window.render()">
+            <input type="color" id="tdc1-color" value="#607d8b" onchange="document.getElementById('tdc1-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+          </div>
+          <div class="row"><label>Area (mm²)</label><input type="number" id="tdc1-area" value="50" min="1" step="1"></div>
+        </div>
+        <div style="padding:4px 8px 6px;">
+          <div class="row"><label>k factor</label><input type="number" id="tdc-k" value="143" min="1" step="1"></div>
+          <div class="row"><label>I min (kA)</label><input type="number" id="tdc-imin" value="1" min="0.001" step="0.1"></div>
+          <div class="row"><label>I max (kA)</label><input type="number" id="tdc-imax" value="20" min="0.1" step="1"></div>
+        </div>
+        <div style="padding:3px 10px 2px;background:#f0f0f0;border-top:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0;">
+          <span style="font-size:10px;font-weight:600;text-transform:uppercase;color:#888;letter-spacing:.04em;">Transformer</span>
+        </div>
+        <div style="padding:4px 8px 6px;">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
+            <span class="rdot" id="tx0-dot" style="background:#e91e63"></span>
+            <input class="rname" type="text" id="tx0-name" value="Aux Tx"
+              onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input type="checkbox" id="tx0-en" onclick="event.stopPropagation()" onchange="window.render()">
+            <input type="color" id="tx0-color" value="#e91e63"
+              onchange="document.getElementById('tx0-dot').style.background=this.value;window.render()"
+              style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+          </div>
+          <div class="row"><label>Rating (MVA)</label><input type="number" id="tx0-mva" value="0.5" min="0.001" step="1" oninput="window._txBadge()"></div>
+          <div class="row"><label>Fault level (kA)</label><input type="number" id="tx0-isc" value="11" min="0.01" step="0.1"></div>
+          <span id="tx0-badge" style="display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;margin-top:4px;margin-bottom:2px;background:#f5f5f5;color:#888;border:0.5px solid #ddd;">Cat I - thermal only</span>
+          <div id="tx0-freq-row" style="display:none;align-items:center;gap:5px;margin-top:3px;">
+            <input type="checkbox" id="tx0-freq" onclick="event.stopPropagation()" onchange="window.render()">
+            <label for="tx0-freq" style="font-size:11px;color:#666;">Show mechanical boundary</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chart-area">
+    <div id="zoom-toolbar">
+      <button class="zt-btn" id="zoomBoxBtn" onclick="window.toggleZoomMode()" title="Box zoom: click and drag">&#128269; Box Zoom</button>
+      <button class="zt-btn" id="fitXBtn" onclick="window.fitXAxis()" title="Fit X axis to data">&#8596; Fit X</button>
+      <button class="zt-btn" id="resetZoomBtn" onclick="window.resetZoomAction()" title="Reset zoom">&#8635; Reset</button>
+      <span class="zt-sep"></span>
+      <label class="leg-check"><input type="checkbox" id="showFull" onchange="render()"> Full curves</label>
+      <label class="leg-check">X axis: <select id="xUnit" onchange="render()" style="font-size:11px;padding:2px 4px;border:1px solid #bbb;border-radius:4px;"><option value="kA">kA</option><option value="A">A</option></select></label>
+      <span class="zt-sep"></span>
+      <button id="exportBtn" onclick="window.exportPNG()" title="Save PNG + copy to clipboard">Export PNG</button>
+      <button id="exportXlsBtn" onclick="window.exportXLSX()">Export Excel</button>
+      <button id="exportRptBtn" onclick="window.exportReport()">Export Report</button>
+    </div>
+    <div class="legend">
+      <div class="leg-item">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#1e6bb8" stroke-width="2.5"/></svg>
+        <span id="leg-r1-name">Relay 1</span>
+      </div>
+      <div class="leg-item">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#c0392b" stroke-width="2.5"/></svg>
+        <span id="leg-r2-name">Relay 2</span>
+      </div>
+      <div class="leg-item" id="leg-cd0" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#27ae60" stroke-width="2.5"/></svg>
+        <span id="leg-cd0-name">Custom 1</span>
+      </div>
+      <div class="leg-item" id="leg-cd1" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e67e22" stroke-width="2.5"/></svg>
+        <span id="leg-cd1-name">Custom 2</span>
+      </div>
+      <div class="leg-item" id="leg-cd2" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#8e44ad" stroke-width="2.5"/></svg>
+        <span id="leg-cd2-name">Custom 3</span>
+      </div>
+      <div class="leg-item" id="leg-tdc0" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#795548" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
+        <span id="leg-tdc0-name">Cable 1</span>
+      </div>
+      <div class="leg-item" id="leg-tdc1" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#607d8b" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
+        <span id="leg-tdc1-name">Cable 2</span>
+        <div class="leg-item" id="leg-tx0" style="display:none;">
+        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e91e63" stroke-width="2.5" stroke-dasharray="5 3"/></svg>
+        <span id="leg-tx0-name">Aux Tx</span>
+      </div>
+    </div>
+    </div>
+    <div id="chartWrap">
+      <canvas id="tcc"></canvas>
+      <div id="zoom-box"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Settings Modal -->
+<div id="settings-modal">
+  <div class="stt-dialog">
+    <div class="stt-hdr"><span>Settings</span><span class="close" onclick="window.closeSettings()">&#x2715;</span></div>
+    <div class="stt-body">
+      <div class="stt-row"><label>Base Voltage (kV)</label><input type="text" id="stt-baseV" maxlength="5"></div>
+      <hr class="stt-sep">
+      <div class="stt-row"><label>Current Axis Unit</label><select id="stt-xUnit"><option value="kA">kA</option><option value="A">A</option></select></div>
+      <div class="stt-row"><label>Current Axis Min (A)</label><input type="number" id="stt-xMin" step="1" min="1"></div>
+      <div class="stt-row"><label>Current Axis Max (A)</label><input type="number" id="stt-xMax" step="100" min="10"></div>
+      <hr class="stt-sep">
+      <div class="stt-row"><label>Display Full Curves</label><input type="checkbox" id="stt-showFull"></div>
+    </div>
+    <div class="stt-ftr">
+      <button class="stt-btn" onclick="window.closeSettings()">Cancel</button>
+      <button class="stt-btn stt-btn-ok" onclick="window.applySettings()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal">
+  <div class="help-dialog">
+    <div class="help-dlg-hdr">
+      <span>TCC Reference — IDMT Formulas</span>
+      <span class="close" onclick="window.closeHelp()">&#x2715;</span>
+    </div>
+    <div class="help-body">
+      <h3>General IEC IDMT Formula</h3>
+      <code class="formula">t = TMS &times; b / ( (I / I<sub>p</sub>)<sup>a</sup> &minus; 1 )</code>
+      <p>where <b>t</b> = operate time (s), <b>TMS</b> = time multiplier setting,<br>
+         <b>I</b> = fault current, <b>I<sub>p</sub></b> = pickup current.</p>
+      <h3>IEC Curve Constants</h3>
+      <table class="help-table">
+        <thead><tr><th>Curve</th><th>Name</th><th>b</th><th>a</th></tr></thead>
+        <tbody>
+          <tr><td>IEC SI</td><td>Standard Inverse</td><td>0.14</td><td>0.02</td></tr>
+          <tr><td>IEC VI</td><td>Very Inverse</td><td>13.5</td><td>1</td></tr>
+          <tr><td>IEC EI</td><td>Extremely Inverse</td><td>80</td><td>2</td></tr>
+          <tr><td>IEC LTI</td><td>Long Time Inverse</td><td>120</td><td>1</td></tr>
+        </tbody>
+      </table>
+      <h3>Definite Time (DT) Stage</h3>
+      <code class="formula">t = t<sub>d</sub> &nbsp; &nbsp; (for I &ge; I<sub>pickup</sub>)</code>
+      <p>The DT stage overrides all IDMT stages above its pickup current.<br>
+         The effective operate time is taken from the drawn (effective) curve.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Device Modal -->
+<div id="cd-modal">
+  <div class="cd-dialog">
+    <div class="cd-dlg-hdr">
+      <span id="cd-modal-title">Edit Points</span>
+      <span class="close" onclick="window.closeCDModal()">&#x2715;</span>
+    </div>
+    <div class="cd-toolbar">
+      <button class="cd-tbtn" onclick="window.cdPasteClipboard()" title="Paste two-column TSV (Current tab Time) from clipboard">&#128203; Paste TSV</button>
+      <button class="cd-tbtn" onclick="window.cdAddRow()" title="Add blank row">&#10010; Row</button>
+      <button class="cd-tbtn" onclick="window.cdDelRow()" title="Delete selected row">&#10005;</button>
+      <button class="cd-tbtn" onclick="window.cdMoveUp()" title="Move row up">&#8679;</button>
+      <button class="cd-tbtn" onclick="window.cdMoveDown()" title="Move row down">&#8681;</button>
+      <button class="cd-tbtn cd-btn-clear" onclick="window.cdClearAll()" title="Clear all rows" style="margin-left:8px;color:#c0392b;border-color:#c0392b;">&#128465; Clear All</button>
+    </div>
+    <div id="cd-tbl-wrap">
+      <table id="cd-table">
+        <thead><tr><th>Current (A)</th><th>Time (s)</th></tr></thead>
+        <tbody id="cd-tbody"></tbody>
+      </table>
+    </div>
+    <div class="cd-dlg-ftr">
+      <button class="cd-btn" onclick="window.closeCDModal()">Cancel</button>
+      <button class="cd-btn cd-btn-ok" onclick="window.saveCDModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
