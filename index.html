@@ -491,12 +491,12 @@
 
   window.toggleStage = function(bodyId, cb) {
     document.getElementById(bodyId).classList.toggle('hidden', !cb.checked);
-    render();
+    window.render();
   };
 
   document.querySelectorAll('input[type=number], select').forEach(el => {
-    el.addEventListener('change', render);
-    el.addEventListener('input',  render);
+    el.addEventListener('change', function(){ window.render(); });
+    el.addEventListener('input',  function(){ window.render(); });
   });
 
 

@@ -102,24 +102,44 @@ export function render() {
     });
   }
 
-  // Local plugin: draw FL labels at top of each vertical line
+  // Local plugin: draw FL labels at top — stagger labels that are horizontally close
   const flLabelPlugin = {
     id: 'flLabel',
     afterDraw(ch) {
       if (window.flParentEn === false) return;
       const { ctx, scales: { x, y } } = ch;
       if (!x || !y) return;
-      ctx.save();
+
+      // Collect active FL entries with pixel position
+      const entries = [];
       faultLevels.forEach((fl, i) => {
         if (fl.en === false || !fl.a) return;
         if (fl.a < x.min * 0.99 || fl.a > x.max * 1.01) return;
         const px  = x.getPixelForValue(fl.a);
-        const col = FL_COLORS[i % FL_COLORS.length];
         const kA  = (fl.a / 1000).toFixed(fl.a < 100 ? 2 : fl.a < 1000 ? 1 : 0);
+        const lbl = (fl.label || ('FL' + (i + 1))) + '  ' + kA + ' kA';
+        entries.push({ px, lbl, col: FL_COLORS[i % FL_COLORS.length] });
+      });
+
+      if (!entries.length) return;
+
+      // Sort by x position and assign stagger levels so overlapping labels stack vertically
+      entries.sort((a, b) => a.px - b.px);
+      ctx.font = 'bold 10px Arial';
+      const levelRight = [];  // rightmost x+width used per level
+      entries.forEach(e => {
+        const w = ctx.measureText(e.lbl).width;
+        let lv = 0;
+        while (levelRight[lv] !== undefined && e.px + 5 < levelRight[lv]) lv++;
+        e.level = lv;
+        levelRight[lv] = e.px + 5 + w + 6;
+      });
+
+      ctx.save();
+      ctx.textAlign = 'left';
+      entries.forEach(({ px, lbl, col, level }) => {
         ctx.fillStyle = col;
-        ctx.font = 'bold 10px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText((fl.label || ('FL' + (i + 1))) + '  ' + kA + ' kA', px + 5, y.top + 16);
+        ctx.fillText(lbl, px + 5, y.top + 14 + level * 14);
       });
       ctx.restore();
     }
