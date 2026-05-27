@@ -5,6 +5,7 @@
  */
 
 import { faultLevels, customDevices } from '../state.js';
+import { getTitle } from './device-manager.js';
 import { getRelays }                  from './inputs.js';
 
 const MAR = 12;
@@ -41,7 +42,7 @@ function legendItems() {
 }
 
 const domVal   = id => { const e = document.getElementById(id); return e ? e.value   : ''; };
-const domProj  = ()  => domVal('projName') || 'TCC Protection Coordination Study';
+const domProj  = ()  => getTitle();
 const domBaseV = ()  => domVal('baseV') || '?';
 const domChk   = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 

@@ -1,8 +1,9 @@
+import { getTitle } from './device-manager.js';
 // PNG export — title centred at top, chart in middle, 2-col legend at bottom
 export function exportPNG() {
   const chartCanvas = document.getElementById('tcc');
   const bv   = (document.getElementById('baseV')   || {}).value || '33';
-  const proj = (document.getElementById('projName') || {}).value || 'TCC Protection Coordination Study';
+  const proj = getTitle();
 
   // Collect legend entries from #chart-legend (same source as PDF export)
   const items = [];

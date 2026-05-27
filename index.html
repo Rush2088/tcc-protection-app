@@ -183,6 +183,44 @@
   .cd-meta-row select { flex:1; padding:3px 6px; border:1px solid #bbb; border-radius:4px; font-size:12px; background:#fff; }
   .cd-meta-row input[type=text] { flex:1; padding:3px 6px; border:1px solid #bbb; border-radius:4px; font-size:12px; }
   .cd-settings-inp { width:100%; padding:3px 5px; border:1px solid #bbb; border-radius:4px; font-size:11px; color:#333; margin-top:3px; }
+
+  /* ── INFO panel compact rows ─────────────────── */
+  .info-row { display:flex; align-items:center; margin-bottom:5px; }
+  .info-row label { font-size:11px; color:#444; width:76px; min-width:76px; text-align:right; padding-right:4px; }
+  .info-sep  { font-size:11px; color:#888; margin-right:6px; flex-shrink:0; }
+  .info-unit { font-size:11px; color:#555; margin-left:4px; }
+  .device-link-btn {
+    background:none; border:none; border-bottom:1.5px solid #1a3a5c;
+    color:#1a3a5c; cursor:pointer; font-size:11px; padding:1px 0;
+    text-align:left; flex:1; min-width:0; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+  }
+  .device-link-btn:hover { color:#274f7a; border-bottom-color:#274f7a; }
+
+  /* ── Chart title bar ─────────────────────────── */
+  #chart-title-bar { text-align:center; padding:3px 0 5px; border-bottom:0.5px solid #e0e0e0; margin-bottom:4px; }
+  #chart-title-text { font-size:13px; font-weight:600; color:#1a3a5c; }
+
+  /* ── Device modal ────────────────────────────── */
+  #device-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.45); z-index:1500; align-items:flex-start; justify-content:center; padding-top:80px; }
+  #device-modal.open { display:flex; }
+  .dev-dialog { background:#fff; border:1px solid #aaa; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.3); width:300px; overflow:hidden; }
+  .dev-dlg-hdr { background:#1a3a5c; color:#fff; padding:8px 12px; font-size:13px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+  .dev-dlg-hdr .close { cursor:pointer; font-size:16px; opacity:0.8; }
+  .dev-dlg-hdr .close:hover { opacity:1; }
+  .dev-list { max-height:220px; overflow-y:auto; padding:4px 0; }
+  .dev-item { display:flex; align-items:center; padding:6px 12px; cursor:pointer; font-size:12px; gap:6px; }
+  .dev-item:hover { background:#f0f4f8; }
+  .dev-item.active { background:#e8f0f8; font-weight:600; color:#1a3a5c; }
+  .dev-item-name { flex:1; }
+  .dev-item-del { padding:2px 5px; background:none; border:1px solid #c0392b55; color:#c0392b; border-radius:3px; cursor:pointer; font-size:11px; }
+  .dev-item-del:hover { background:#fce4e4; }
+  .dev-add-row { display:flex; gap:6px; padding:8px 12px; border-top:1px solid #e8e8e8; }
+  .dev-add-input { flex:1; padding:4px 6px; border:1px solid #bbb; border-radius:4px; font-size:12px; }
+  .dev-add-btn { padding:4px 10px; background:#1a3a5c; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; }
+  .dev-add-btn:hover { background:#274f7a; }
+  .dev-dlg-ftr { padding:8px 12px; display:flex; justify-content:flex-end; border-top:1px solid #e8e8e8; }
+  .dev-close-btn { padding:5px 14px; border:1px solid #aaa; border-radius:4px; background:#f5f5f5; cursor:pointer; font-size:12px; }
 </style>
 </head>
 <body>
@@ -224,8 +262,22 @@
   <div id="sidebar">
     <div class="card">
       <h4>Info</h4>
-      <div class="row"><label>Project</label><input type="text" id="projName" value="Sample Proj - TCC" maxlength="25" style="width:9em;font-size:11px;"></div>
-      <div class="row"><label>Base Voltage</label><input type="text" id="baseV" value="0.4" maxlength="5" style="width:3.5em;"><span style="margin-left:3px;font-size:11px;color:#555">kV</span></div>
+      <div class="info-row">
+        <label>Project</label><span class="info-sep">:</span>
+        <input type="text" id="projName" value="My Project" maxlength="40"
+          style="flex:1;font-size:11px;border:1px solid #bbb;border-radius:4px;padding:2px 5px;"
+          oninput="window.onProjectNameChange && window.onProjectNameChange()">
+      </div>
+      <div class="info-row">
+        <label>Device</label><span class="info-sep">:</span>
+        <button id="deviceBtn" class="device-link-btn" onclick="window.openDeviceModal()">Device 1</button>
+      </div>
+      <div class="info-row">
+        <label>Base voltage</label><span class="info-sep">:</span>
+        <input type="text" id="baseV" value="0.415" maxlength="8"
+          style="width:3.5em;font-size:11px;border:1px solid #bbb;border-radius:4px;padding:2px 5px;">
+        <span class="info-unit">kV</span>
+      </div>
     </div>
 
     <div id="relay-cards"></div>
@@ -306,6 +358,7 @@
   </div>
 
   <div id="chart-area">
+    <div id="chart-title-bar"><span id="chart-title-text">My Project — Device 1 TCC Plot</span></div>
     <div id="zoom-toolbar">
       <button class="zt-btn" id="zoomBoxBtn" onclick="window.toggleZoomMode()" title="Box zoom: click and drag">&#128269; Box Zoom</button>
       <button class="zt-btn" id="fitXBtn" onclick="window.fitXAxis()" title="Fit X axis to data">&#8596; Fit X</button>
@@ -423,6 +476,10 @@
 
 <script type="module">
   import './src/chart/plugins.js';
+  import {
+    initDeviceManager, switchDevice, addDevice, deleteDevice,
+    onProjectNameChange, getAllDevices, getActiveIdx
+  } from './src/ui/device-manager.js';
   import { render, zoomState, resetZoom } from './src/chart/render.js';
   import { addFL, removeFL, renderFLList, updateFL } from './src/ui/fault-levels.js';
   import { faultLevels, relays }           from './src/state.js';
@@ -641,11 +698,81 @@
     if (e.target === this) window.closeHelp();
   });
 
+  // ── Device manager wiring ───────────────────────────────────────────────────
+  window.onProjectNameChange = onProjectNameChange;
+
+  function _escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  window.openDeviceModal = function() {
+    const devices  = getAllDevices();
+    const active   = getActiveIdx();
+    const projName = document.getElementById('projName')?.value || '';
+    const titleEl  = document.getElementById('dev-modal-title');
+    if (titleEl) titleEl.textContent = 'Devices' + (projName ? ' — ' + projName : '');
+    const list = document.getElementById('dev-list');
+    list.innerHTML = devices.map((d, i) =>
+      '<div class="dev-item' + (i === active ? ' active' : '') + '" onclick="window._devSwitch(' + i + ')">' +
+      '<span class="dev-item-name">' + _escHtml(d.name) + '</span>' +
+      '<button class="dev-item-del" onclick="event.stopPropagation();window._devDel(' + i + ')" title="Delete">&#x2715;</button>' +
+      '</div>'
+    ).join('');
+    document.getElementById('dev-add-input').value = '';
+    document.getElementById('device-modal').classList.add('open');
+  };
+
+  window.closeDeviceModal = function() {
+    document.getElementById('device-modal').classList.remove('open');
+  };
+
+  window.addDeviceFromModal = function() {
+    const inp  = document.getElementById('dev-add-input');
+    const name = (inp?.value || '').trim();
+    if (!name) { inp?.focus(); return; }
+    addDevice(name);
+    window.openDeviceModal();
+  };
+
+  window._devSwitch = function(idx) {
+    switchDevice(idx);
+    window.openDeviceModal();
+  };
+
+  window._devDel = function(idx) {
+    const devs = getAllDevices();
+    if (!confirm('Delete device "' + (devs[idx]?.name || '') + '"?')) return;
+    deleteDevice(idx);
+    window.openDeviceModal();
+  };
+
+  document.getElementById('device-modal').addEventListener('click', function(e) {
+    if (e.target === this) window.closeDeviceModal();
+  });
+
   window.addEventListener('resize', render);
   renderRelaySidebar();
   renderCustomSidebar();
   renderFLList();
   render();
+  initDeviceManager();
 </script>
+
+<!-- Device Modal -->
+<div id="device-modal">
+  <div class="dev-dialog">
+    <div class="dev-dlg-hdr">
+      <span id="dev-modal-title">Manage Devices</span>
+      <span class="close" onclick="window.closeDeviceModal()">&#x2715;</span>
+    </div>
+    <div class="dev-list" id="dev-list"></div>
+    <div class="dev-add-row">
+      <input type="text" id="dev-add-input" class="dev-add-input" placeholder="New device name…" maxlength="40"
+        onkeydown="if(event.key==='Enter')window.addDeviceFromModal()">
+      <button class="dev-add-btn" onclick="window.addDeviceFromModal()">+ Add</button>
+    </div>
+    <div class="dev-dlg-ftr">
+      <button class="dev-close-btn" onclick="window.closeDeviceModal()">Close</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
