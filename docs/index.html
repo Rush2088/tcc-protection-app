@@ -10,9 +10,9 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #f0f2f5; font-family: Arial, sans-serif; font-size: 13px; color: #222; }
-  #header { background: #1a3a5c; color: #fff; padding: 10px 20px; display: flex; align-items: center; justify-content: center; }
+  #header { background: #1a3a5c; color: #fff; padding: 5px 20px; display: flex; align-items: center; justify-content: center; }
   #header h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
-  #main { display: flex; gap: 12px; padding: 12px; height: calc(100vh - 68px); }
+  #main { display: flex; gap: 12px; padding: 12px; height: calc(100vh - 58px); }
   #sidebar { width: 252px; min-width: 220px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
   .card { background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 10px 12px; }
   .card h4 { font-size: 10px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 0.5px solid #e0e0e0; padding-bottom: 5px; }
@@ -35,7 +35,6 @@
   .stg-body { padding-top: 3px; }
   .stg-body.hidden { display: none; }
   #chart-area { flex: 1; background: #fff; border-radius: 8px; border: 0.5px solid #ccc; display: flex; flex-direction: column; padding: 12px; min-width: 0; }
-  /* legend CSS consolidated into #zoom-toolbar block above */
   .leg-item  { display: flex; align-items: center; gap: 5px; }
   .leg-check { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; color: #888; }
   #chartWrap { position: relative; flex: 1; min-height: 0; }
@@ -57,30 +56,15 @@
   .fl-ilbl { font-size: 10px; color: #888; white-space: nowrap; }
   .fl-del { padding: 1px 5px; background: #c0392b18; color: #c0392b; border: 1px solid #c0392b55; border-radius: 3px; cursor: pointer; font-size: 11px; }
   .fl-add { padding: 4px 10px; background: #1a3a5c; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; width: 100%; }
-
-  /* Custom Device card */
   .cd-body { padding: 6px 10px 8px; }
   .cd-body.collapsed { display: none; }
   .cd-row { display: flex; align-items: center; gap: 6px; }
   .cd-edit-btn { flex: 1; padding: 4px 8px; background: #f0f4f8; border: 1px solid #bbb; border-radius: 4px; cursor: pointer; font-size: 12px; text-align: left; }
   .cd-edit-btn:hover { background: #ddeeff; }
   .cd-ptcount { font-size: 10px; color: #888; white-space: nowrap; }
-
-  /* Modal */
-  #cd-modal {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.45); z-index: 1000;
-    align-items: flex-start; justify-content: center; padding-top: 60px;
-  }
-  .cd-dialog {
-    background: #f5f5f5; border: 1px solid #aaa; border-radius: 6px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.35); width: 360px; overflow: hidden;
-  }
-  .cd-dlg-hdr {
-    background: #3c5a8a; color: #fff; padding: 8px 12px;
-    font-size: 13px; font-weight: 600;
-    display: flex; justify-content: space-between; align-items: center;
-  }
+  #cd-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; align-items: flex-start; justify-content: center; padding-top: 60px; }
+  .cd-dialog { background: #f5f5f5; border: 1px solid #aaa; border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,0.35); width: 360px; overflow: hidden; }
+  .cd-dlg-hdr { background: #3c5a8a; color: #fff; padding: 8px 12px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   .cd-dlg-hdr .close { cursor: pointer; font-size: 16px; line-height: 1; opacity: 0.8; }
   .cd-dlg-hdr .close:hover { opacity: 1; }
   .cd-toolbar { background: #e8e8e8; padding: 5px 8px; display: flex; gap: 5px; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
@@ -97,27 +81,12 @@
   .cd-btn { padding: 5px 16px; border-radius: 4px; border: 1px solid #aaa; cursor: pointer; font-size: 12px; }
   .cd-btn-ok { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
   .cd-btn-ok:hover { background: #274f7a; }
-
-  /* Export Excel + Help buttons */
   #exportXlsBtn { padding: 6px 14px; background: #1a3a5c; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
   #exportXlsBtn:hover { background: #274f7a; }
-
-  /* Help modal */
-  #help-modal {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.45); z-index: 2000;
-    align-items: flex-start; justify-content: center; padding-top: 60px;
-  }
+  #help-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 2000; align-items: flex-start; justify-content: center; padding-top: 60px; }
   #help-modal.open { display: flex; }
-  .help-dialog {
-    background: #fff; border: 1px solid #aaa; border-radius: 8px;
-    box-shadow: 0 6px 28px rgba(0,0,0,0.35); width: 480px; overflow: hidden;
-  }
-  .help-dlg-hdr {
-    background: #1a3a5c; color: #fff; padding: 10px 14px;
-    font-size: 13px; font-weight: 600;
-    display: flex; justify-content: space-between; align-items: center;
-  }
+  .help-dialog { background: #fff; border: 1px solid #aaa; border-radius: 8px; box-shadow: 0 6px 28px rgba(0,0,0,0.35); width: 480px; overflow: hidden; }
+  .help-dlg-hdr { background: #1a3a5c; color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   .help-dlg-hdr .close { cursor: pointer; font-size: 16px; opacity: 0.8; }
   .help-dlg-hdr .close:hover { opacity: 1; }
   .help-body { padding: 16px 18px; font-size: 12px; color: #222; line-height: 1.6; }
@@ -127,10 +96,7 @@
   .help-table th { background: #e8edf3; padding: 5px 8px; text-align: center; border: 1px solid #ccc; }
   .help-table td { padding: 4px 8px; border: 1px solid #e0e0e0; text-align: center; }
   .help-table tr:nth-child(even) td { background: #f9fafb; }
-
-
-  /* App menu bar */
-  #menubar { background: #f0f0f0; border-bottom: 1px solid #ccc; display: flex; align-items: stretch; padding: 0 4px; user-select: none; position: relative; z-index: 500; }
+  #menubar { background: #f0f0f0; border-bottom: 1px solid #ccc; display: flex; align-items: center; padding: 0 4px; user-select: none; position: relative; z-index: 500; }
   .mb-item { position: relative; }
   .mb-item > span { display: block; padding: 4px 12px; font-size: 12px; color: #222; cursor: default; line-height: 1.6; }
   .mb-item > span:hover, .mb-item.open > span { background: #1a3a5c; color: #fff; }
@@ -139,14 +105,9 @@
   .mb-opt { padding: 6px 16px; font-size: 12px; color: #222; cursor: pointer; white-space: nowrap; }
   .mb-opt:hover { background: #1a3a5c; color: #fff; }
   .mb-sep { border-top: 1px solid #e0e0e0; margin: 3px 0; }
-  .mb-vsep { width: 1px; height: 16px; background: rgba(255,255,255,0.35); margin: 0 6px; align-self: center; }
-  #menubar { align-items: center; }
-
-
-  /* Zoom toolbar */
   #zoom-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
   .zt-sep { flex: 1; min-width: 8px; max-width: 24px; }
-  .legend { display: flex; gap: 14px; margin-bottom: 6px; font-size: 12px; flex-wrap: wrap; color: #333; align-items: center; justify-content: flex-start; }
+  .legend { display: flex; gap: 14px; margin-bottom: 6px; font-size: 12px; flex-wrap: wrap; color: #333; align-items: center; }
   .zt-btn { padding: 4px 10px; font-size: 11px; border: 1px solid #bbb; border-radius: 4px; background: #f5f5f5; cursor: pointer; white-space: nowrap; }
   .zt-btn:hover { background: #e0e8f0; border-color: #1a3a5c; }
   .zt-btn.active { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
@@ -167,9 +128,15 @@
   .stt-btn { padding: 6px 18px; border-radius: 4px; border: 1px solid #aaa; cursor: pointer; font-size: 12px; }
   .stt-btn-ok { background: #1a3a5c; color: #fff; border-color: #1a3a5c; }
   .stt-btn-ok:hover { background: #274f7a; }
-
+  #chart-title { text-align:center; font-size:13px; font-weight:600; color:#1a3a5c; padding:2px 0 4px; letter-spacing:0.2px; }
+  #chart-legend { margin-top:5px; padding-top:4px; border-top:0.5px solid #e0e0e0; }
+  #chart-legend table { border-collapse:collapse; }
+  #chart-legend td { padding:2px 5px 2px 0; vertical-align:middle; white-space:nowrap; color:#333; font-size:11px; }
+  #chart-legend td.leg-name { font-weight:600; padding-right:8px; min-width:0; }
+  #chart-legend td.leg-settings { color:#666; }
+  .cd-settings-inp { width:100%; padding:3px 5px; border:1px solid #bbb; border-radius:4px; font-size:11px; color:#333; margin-top:3px; }
 </style>
-  <script type="module" crossorigin src="/tcc-protection-app/assets/index.BNV9V16S.js"></script>
+  <script type="module" crossorigin src="/tcc-protection-app/assets/index.D1aZpMdv.js"></script>
 </head>
 <body>
 <div id="header"><h1>Protection Coordination - TCC</h1></div>
@@ -213,34 +180,24 @@
       <div class="row"><label>Project</label><input type="text" id="projName" value="Sample Proj - TCC" maxlength="25" style="width:9em;font-size:11px;"></div>
       <div class="row"><label>Base Voltage</label><input type="text" id="baseV" value="0.4" maxlength="5" style="width:3.5em;"><span style="margin-left:3px;font-size:11px;color:#555">kV</span></div>
     </div>
-
     <div id="relay-cards"></div>
-
     <div id="custom-cards"></div>
-
-
-
-    <!-- Fault Levels -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleFL()">
         <span class="chevron" id="flchv">&#9654;</span>
         <span class="rname" style="flex:1;font-weight:600;">Fault Levels</span>
-        <input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart"
-          onchange="window.flParentEn=this.checked;window.render()" onclick="event.stopPropagation()" style="cursor:pointer;">
+        <input type="checkbox" id="flParentEn" checked title="Show/hide all fault levels on chart" onchange="window.flParentEn=this.checked;window.render()" onclick="event.stopPropagation()" style="cursor:pointer;">
       </div>
       <div class="relay-body collapsed" id="flBody">
         <div id="flList"></div>
         <button class="fl-add" onclick="window.addFL()">+ Add Fault Level</button>
       </div>
     </div>
-
-    <!-- Thermal Damage Curves -->
     <div class="relay-card">
       <div class="relay-hdr" onclick="toggleTDC()">
         <span class="chevron" id="tdcchv">&#9654;</span>
         <span class="rname" style="flex:1;font-weight:600;">Thermal Damage</span>
-        <input type="checkbox" id="tdcParentEn" title="Show/hide all thermal damage curves"
-          onclick="event.stopPropagation()" onchange="window.tdcParentEn=this.checked;window.render()" style="cursor:pointer;">
+        <input type="checkbox" id="tdcParentEn" title="Show/hide all thermal damage curves" onclick="event.stopPropagation()" onchange="window.tdcParentEn=this.checked;window.render()" style="cursor:pointer;">
       </div>
       <div class="relay-body collapsed" id="tdcBody">
         <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
@@ -250,7 +207,7 @@
             <input type="checkbox" id="tdc0-en" onclick="event.stopPropagation()" onchange="window.render()">
             <input type="color" id="tdc0-color" value="#795548" onchange="document.getElementById('tdc0-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
           </div>
-          <div class="row"><label>Area (mm²)</label><input type="number" id="tdc0-area" value="95" min="1" step="1"></div>
+          <div class="row"><label>Area (mm&sup2;)</label><input type="number" id="tdc0-area" value="95" min="1" step="1"></div>
         </div>
         <div style="padding:4px 8px 2px;border-bottom:1px solid #eee;">
           <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
@@ -259,7 +216,7 @@
             <input type="checkbox" id="tdc1-en" onclick="event.stopPropagation()" onchange="window.render()">
             <input type="color" id="tdc1-color" value="#607d8b" onchange="document.getElementById('tdc1-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
           </div>
-          <div class="row"><label>Area (mm²)</label><input type="number" id="tdc1-area" value="50" min="1" step="1"></div>
+          <div class="row"><label>Area (mm&sup2;)</label><input type="number" id="tdc1-area" value="50" min="1" step="1"></div>
         </div>
         <div style="padding:4px 8px 6px;">
           <div class="row"><label>k factor</label><input type="number" id="tdc-k" value="143" min="1" step="1"></div>
@@ -272,12 +229,9 @@
         <div style="padding:4px 8px 6px;">
           <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;">
             <span class="rdot" id="tx0-dot" style="background:#e91e63"></span>
-            <input class="rname" type="text" id="tx0-name" value="Aux Tx"
-              onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
+            <input class="rname" type="text" id="tx0-name" value="Aux Tx" onclick="event.stopPropagation()" oninput="window.render()" style="flex:1;">
             <input type="checkbox" id="tx0-en" onclick="event.stopPropagation()" onchange="window.render()">
-            <input type="color" id="tx0-color" value="#e91e63"
-              onchange="document.getElementById('tx0-dot').style.background=this.value;window.render()"
-              style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
+            <input type="color" id="tx0-color" value="#e91e63" onchange="document.getElementById('tx0-dot').style.background=this.value;window.render()" style="width:28px;height:20px;border:none;cursor:pointer;flex-shrink:0;">
           </div>
           <div class="row"><label>Rating (MVA)</label><input type="number" id="tx0-mva" value="0.5" min="0.001" step="1" oninput="window._txBadge()"></div>
           <div class="row"><label>Fault level (kA)</label><input type="number" id="tx0-isc" value="11" min="0.01" step="0.1"></div>
@@ -290,7 +244,6 @@
       </div>
     </div>
   </div>
-
   <div id="chart-area">
     <div id="zoom-toolbar">
       <button class="zt-btn" id="zoomBoxBtn" onclick="window.toggleZoomMode()" title="Box zoom: click and drag">&#128269; Box Zoom</button>
@@ -304,49 +257,15 @@
       <button id="exportXlsBtn" onclick="window.exportXLSX()">Export Excel</button>
       <button id="exportRptBtn" onclick="window.exportReport()">Export Report</button>
     </div>
-    <div class="legend">
-      <div class="leg-item">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#1e6bb8" stroke-width="2.5"/></svg>
-        <span id="leg-r1-name">Relay 1</span>
-      </div>
-      <div class="leg-item">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#c0392b" stroke-width="2.5"/></svg>
-        <span id="leg-r2-name">Relay 2</span>
-      </div>
-      <div class="leg-item" id="leg-cd0" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#27ae60" stroke-width="2.5"/></svg>
-        <span id="leg-cd0-name">Custom 1</span>
-      </div>
-      <div class="leg-item" id="leg-cd1" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e67e22" stroke-width="2.5"/></svg>
-        <span id="leg-cd1-name">Custom 2</span>
-      </div>
-      <div class="leg-item" id="leg-cd2" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#8e44ad" stroke-width="2.5"/></svg>
-        <span id="leg-cd2-name">Custom 3</span>
-      </div>
-      <div class="leg-item" id="leg-tdc0" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#795548" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
-        <span id="leg-tdc0-name">Cable 1</span>
-      </div>
-      <div class="leg-item" id="leg-tdc1" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#607d8b" stroke-width="2.5" stroke-dasharray="4 2"/></svg>
-        <span id="leg-tdc1-name">Cable 2</span>
-        <div class="leg-item" id="leg-tx0" style="display:none;">
-        <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#e91e63" stroke-width="2.5" stroke-dasharray="5 3"/></svg>
-        <span id="leg-tx0-name">Aux Tx</span>
-      </div>
-    </div>
-    </div>
+    <div id="chart-title"></div>
     <div id="chartWrap">
       <canvas id="tcc"></canvas>
       <div id="zoom-box"></div>
     </div>
+    <div id="chart-legend"></div>
   </div>
 </div>
 
-
-<!-- Settings Modal -->
 <div id="settings-modal">
   <div class="stt-dialog">
     <div class="stt-hdr"><span>Settings</span><span class="close" onclick="window.closeSettings()">&#x2715;</span></div>
@@ -366,18 +285,13 @@
   </div>
 </div>
 
-<!-- Help Modal -->
 <div id="help-modal">
   <div class="help-dialog">
-    <div class="help-dlg-hdr">
-      <span>TCC Reference — IDMT Formulas</span>
-      <span class="close" onclick="window.closeHelp()">&#x2715;</span>
-    </div>
+    <div class="help-dlg-hdr"><span>TCC Reference &mdash; IDMT Formulas</span><span class="close" onclick="window.closeHelp()">&#x2715;</span></div>
     <div class="help-body">
       <h3>General IEC IDMT Formula</h3>
       <code class="formula">t = TMS &times; b / ( (I / I<sub>p</sub>)<sup>a</sup> &minus; 1 )</code>
-      <p>where <b>t</b> = operate time (s), <b>TMS</b> = time multiplier setting,<br>
-         <b>I</b> = fault current, <b>I<sub>p</sub></b> = pickup current.</p>
+      <p>where <b>t</b> = operate time (s), <b>TMS</b> = time multiplier setting,<br><b>I</b> = fault current, <b>I<sub>p</sub></b> = pickup current.</p>
       <h3>IEC Curve Constants</h3>
       <table class="help-table">
         <thead><tr><th>Curve</th><th>Name</th><th>b</th><th>a</th></tr></thead>
@@ -389,27 +303,22 @@
         </tbody>
       </table>
       <h3>Definite Time (DT) Stage</h3>
-      <code class="formula">t = t<sub>d</sub> &nbsp; &nbsp; (for I &ge; I<sub>pickup</sub>)</code>
-      <p>The DT stage overrides all IDMT stages above its pickup current.<br>
-         The effective operate time is taken from the drawn (effective) curve.</p>
+      <code class="formula">t = t<sub>d</sub> &nbsp; (for I &ge; I<sub>pickup</sub>)</code>
+      <p>The DT stage overrides all IDMT stages above its pickup current.</p>
     </div>
   </div>
 </div>
 
-<!-- Custom Device Modal -->
 <div id="cd-modal">
   <div class="cd-dialog">
-    <div class="cd-dlg-hdr">
-      <span id="cd-modal-title">Edit Points</span>
-      <span class="close" onclick="window.closeCDModal()">&#x2715;</span>
-    </div>
+    <div class="cd-dlg-hdr"><span id="cd-modal-title">Edit Points</span><span class="close" onclick="window.closeCDModal()">&#x2715;</span></div>
     <div class="cd-toolbar">
-      <button class="cd-tbtn" onclick="window.cdPasteClipboard()" title="Paste two-column TSV (Current tab Time) from clipboard">&#128203; Paste TSV</button>
-      <button class="cd-tbtn" onclick="window.cdAddRow()" title="Add blank row">&#10010; Row</button>
-      <button class="cd-tbtn" onclick="window.cdDelRow()" title="Delete selected row">&#10005;</button>
-      <button class="cd-tbtn" onclick="window.cdMoveUp()" title="Move row up">&#8679;</button>
-      <button class="cd-tbtn" onclick="window.cdMoveDown()" title="Move row down">&#8681;</button>
-      <button class="cd-tbtn cd-btn-clear" onclick="window.cdClearAll()" title="Clear all rows" style="margin-left:8px;color:#c0392b;border-color:#c0392b;">&#128465; Clear All</button>
+      <button class="cd-tbtn" onclick="window.cdPasteClipboard()">&#128203; Paste TSV</button>
+      <button class="cd-tbtn" onclick="window.cdAddRow()">&#10010; Row</button>
+      <button class="cd-tbtn" onclick="window.cdDelRow()">&#10005;</button>
+      <button class="cd-tbtn" onclick="window.cdMoveUp()">&#8679;</button>
+      <button class="cd-tbtn" onclick="window.cdMoveDown()">&#8681;</button>
+      <button class="cd-tbtn cd-btn-clear" onclick="window.cdClearAll()" style="margin-left:8px;color:#c0392b;border-color:#c0392b;">&#128465; Clear All</button>
     </div>
     <div id="cd-tbl-wrap">
       <table id="cd-table">
@@ -423,6 +332,5 @@
     </div>
   </div>
 </div>
-
 </body>
 </html>
