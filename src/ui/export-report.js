@@ -1,6 +1,6 @@
 /**
  * export-report.js  Two-page PDF report
- *   Page 1: A4 landscape - TCC chart + title + 2-col legend (with settings text)
+ *   Page 1: A4 landscape - title at top, TCC chart fills middle, 2-col legend at bottom
  *   Page 2: A4 landscape - Settings, relay boxes, custom device boxes with settings
  */
 
@@ -45,13 +45,13 @@ const domProj  = ()  => domVal('projName') || 'TCC Protection Coordination Study
 const domBaseV = ()  => domVal('baseV') || '?';
 const domChk   = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 
-// ---- Page 1: Landscape - TCC Chart ------------------------------------------
+// ---- Page 1: title top, chart middle, legend bottom -------------------------
 function addChartPage(doc) {
   const PW   = doc.internal.pageSize.getWidth();
   const PH   = doc.internal.pageSize.getHeight();
   const proj = domProj();
-  const bv   = domBaseV();
 
+  // Title at top
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(26, 58, 92);
@@ -67,15 +67,34 @@ function addChartPage(doc) {
   doc.setLineWidth(0.4);
   doc.line(MAR, MAR + 6, PW - MAR, MAR + 6);
 
-  // Legend - 2 columns matching the web layout; each row: swatch | name bold | settings grey
-  const items = legendItems();
-  let legY = MAR + 11;
+  const chartTop = MAR + 10;
+
+  // Pre-calculate legend height so we can size the chart accordingly
+  const items  = legendItems();
+  const ROW_H  = 5.5;
+  const half   = Math.ceil(items.length / 2);
+  const legRows = items.length ? half : 0;
+  const LEG_H  = legRows ? legRows * ROW_H + 9 : 0;  // rows + padding above
+
+  // Chart fills space between title area and legend area
+  const chartBottom = PH - MAR - LEG_H;
+  const chartH      = chartBottom - chartTop;
+
+  const canvas  = document.getElementById('tcc');
+  const imgData = canvas.toDataURL('image/jpeg', 0.82);
+  doc.addImage(imgData, 'JPEG', MAR, chartTop, PW - 2 * MAR, chartH);
+
+  // Legend at bottom
   if (items.length) {
-    const ROW_H = 5.5;
+    const legY  = chartBottom + 4;   // small gap after chart
     const colW  = (PW - 2 * MAR) / 2;
-    const half  = Math.ceil(items.length / 2);
     const col1  = items.slice(0, half);
     const col2  = items.slice(half);
+
+    // Thin divider above legend
+    doc.setDrawColor(200, 210, 220);
+    doc.setLineWidth(0.3);
+    doc.line(MAR, legY - 2, PW - MAR, legY - 2);
 
     function drawLegCol(list, xBase) {
       list.forEach((item, idx) => {
@@ -99,12 +118,7 @@ function addChartPage(doc) {
 
     drawLegCol(col1, MAR);
     drawLegCol(col2, MAR + colW);
-    legY += Math.max(col1.length, col2.length) * ROW_H + 3;
   }
-
-  const canvas  = document.getElementById('tcc');
-  const imgData = canvas.toDataURL('image/jpeg', 0.82);
-  doc.addImage(imgData, 'JPEG', MAR, legY + 1, PW - 2*MAR, PH - legY - 1 - MAR);
 }
 
 // ---- Page 2: Landscape - Settings -------------------------------------------
@@ -172,14 +186,10 @@ function drawCDBox(doc, cd, bx, by, bw) {
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   doc.text(cd.name, bx + 3, by + 5);
   doc.setFontSize(8);
-  // Show device type + enable status in header band
   const typeStr = cd.deviceType ? cd.deviceType + '  |  ' : '';
   doc.text(typeStr + (cd.en ? 'ENABLED' : 'DISABLED'), bx + bw - 3, by + 5, { align: 'right' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(60, 60, 60);
-  doc.text(
-    'Custom scatter curve - ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''),
-    bx + 4, by + 13
-  );
+  doc.text('Custom scatter curve - ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''), bx + 4, by + 13);
   if (hasSettings) {
     doc.setFontSize(8); doc.setTextColor(50, 50, 50);
     doc.text('Settings: ' + cd.settings, bx + 4, by + 20);
@@ -201,17 +211,15 @@ function addSettingsPage(doc) {
   doc.setDrawColor(180, 195, 210); doc.setLineWidth(0.4);
   doc.line(MAR, y, PW - MAR, y);
   y += 5;
-
   const colW  = (PW - 2 * MAR - 6) / 2;
   const col1X = MAR;
   const col2X = MAR + colW + 6;
   const relays = getRelays();
-
   if (relays[0]) drawRelayBox(doc, relays[0], col1X, y, colW, bv);
   if (relays[1]) drawRelayBox(doc, relays[1], col2X, y, colW, bv);
   y += Math.max(relayBoxH(relays[0]), relays[1] ? relayBoxH(relays[1]) : 0) + 5;
 
-  // Custom devices - include settings and deviceType from state
+  // Custom devices
   const cds = customDevices.map((cd, i) => ({
     name:       domVal('cd' + i + '-name') || cd.name,
     en:         domChk('cd' + i + '-en'),
