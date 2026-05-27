@@ -92,12 +92,6 @@ function buildCDCard(cd, i) {
       <button class="cd-edit-btn" onclick="window.openCDModal(${i})">&#9998; Edit Points</button>
       <span class="cd-ptcount" id="cd${i}-ptcount">${cd.points.length} pts</span>
     </div>
-    <div style="padding:3px 0 4px;">
-      <label style="font-size:10px;color:#888;display:block;margin-bottom:2px;">Legend text (optional)</label>
-      <input type="text" class="cd-settings-inp" id="cd${i}-settings" value="${esc(cd.settings||'')}"
-        placeholder="e.g. In=250A, Ir=125A, td=0ms..."
-        oninput="window.render()" onclick="event.stopPropagation()">
-    </div>
   </div>
 </div>`;
 }

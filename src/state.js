@@ -18,9 +18,9 @@ export const relays = [
 
 export const faultLevels   = [];
 export const customDevices = [
-  { name: 'Custom 1', en: false, color: '#27ae60', points: [], settings: '' },
-  { name: 'Custom 2', en: false, color: '#e67e22', points: [], settings: '' },
-  { name: 'Custom 3', en: false, color: '#8e44ad', points: [], settings: '' }
+  { name: 'Custom 1', en: false, color: '#27ae60', points: [], settings: '', deviceType: '' },
+  { name: 'Custom 2', en: false, color: '#e67e22', points: [], settings: '', deviceType: '' },
+  { name: 'Custom 3', en: false, color: '#8e44ad', points: [], settings: '', deviceType: '' }
 ];
 export const thermalCables = [
   { name: 'Cable 1', en: false, color: '#795548', area: 95 },
