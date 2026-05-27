@@ -22,10 +22,12 @@ export function saveSession() {
       dt: { en: r.dt.en, ip: r.dt.ip, td:  r.dt.td  }
     })),
     customDevices: customDevices.map((cd, i) => ({
-      name:   gVal('cd' + i + '-name') || cd.name,
-      en:     gChk('cd' + i + '-en'),
-      color:  gVal('cd' + i + '-color') || cd.color,
-      points: cd.points.map(p => ({ i: p.i, t: p.t }))
+      name:       gVal('cd' + i + '-name') || cd.name,
+      en:         gChk('cd' + i + '-en'),
+      color:      gVal('cd' + i + '-color') || cd.color,
+      points:     cd.points.map(p => ({ i: p.i, t: p.t })),
+      deviceType: cd.deviceType || '',
+      settings:   cd.settings   || ''
     })),
     thermalCables: thermalCables.map((tc, i) => ({
       name:  gVal('tdc' + i + '-name')  || tc.name,
@@ -91,13 +93,15 @@ function applySession(data) {
   });
   if (window.renderRelaySidebar) window.renderRelaySidebar();
 
-  // Custom devices
+  // Custom devices — restore name, color, en, points, deviceType, settings
   (data.customDevices || []).forEach((cd, i) => {
     if (!customDevices[i]) return;
-    customDevices[i].name   = cd.name   ?? customDevices[i].name;
-    customDevices[i].color  = cd.color  ?? customDevices[i].color;
-    customDevices[i].en     = cd.en     ?? customDevices[i].en;
-    customDevices[i].points = (cd.points || []).map(p => ({ i: p.i, t: p.t }));
+    customDevices[i].name       = cd.name       ?? customDevices[i].name;
+    customDevices[i].color      = cd.color      ?? customDevices[i].color;
+    customDevices[i].en         = cd.en         ?? customDevices[i].en;
+    customDevices[i].points     = (cd.points || []).map(p => ({ i: p.i, t: p.t }));
+    customDevices[i].deviceType = cd.deviceType ?? customDevices[i].deviceType ?? '';
+    customDevices[i].settings   = cd.settings   ?? customDevices[i].settings   ?? '';
     sVal('cd' + i + '-name',  customDevices[i].name);
     sChk('cd' + i + '-en',    customDevices[i].en);
     const colEl = gEl('cd' + i + '-color'); if (colEl) colEl.value = customDevices[i].color;
