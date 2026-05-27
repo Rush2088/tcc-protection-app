@@ -133,7 +133,7 @@ function relayBoxH(relay) {
 }
 
 function drawStageBlock(doc, en, title, x, y) {
-  doc.setFontSize(8.5);
+  doc.setFontSize(9);
   if (en) {
     doc.setFont('helvetica', 'bold');   doc.setTextColor(40, 40, 40);
     doc.text(title, x, y); y += 4;
@@ -153,27 +153,27 @@ function drawRelayBox(doc, relay, bx, by, bw, bv) {
   doc.rect(bx, by, bw, 8, 'F');
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(255, 255, 255);
   doc.text(relay.name, bx + 3, by + 5.5);
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.text(relay.en ? 'ENABLED' : 'DISABLED', bx + bw - 3, by + 5.5, { align: 'right' });
   let y = by + 11;
   const ind = bx + 4;
   y = drawStageBlock(doc, relay.s1.en, 'Stage 1 - IDMT', ind, y);
   if (relay.s1.en) {
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(9);
     doc.text('Pickup: ' + relay.s1.ip + ' A  (@ ' + bv + ' kV)', ind + 3, y); y += 4;
     doc.text('TMS: ' + relay.s1.tms, ind + 3, y); y += 4;
     doc.text('Curve: ' + (CURVE_NAMES[relay.s1.ct] || relay.s1.ct), ind + 3, y); y += 5;
   }
   y = drawStageBlock(doc, relay.s2.en, 'Stage 2 - IDMT', ind, y);
   if (relay.s2.en) {
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(9);
     doc.text('Pickup: ' + relay.s2.ip + ' A  (@ ' + bv + ' kV)', ind + 3, y); y += 4;
     doc.text('TMS: ' + relay.s2.tms, ind + 3, y); y += 4;
     doc.text('Curve: ' + (CURVE_NAMES[relay.s2.ct] || relay.s2.ct), ind + 3, y); y += 5;
   }
   y = drawStageBlock(doc, relay.dt.en, 'Stage 2 - DT', ind, y);
   if (relay.dt.en) {
-    doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(9);
     doc.text('Pickup: ' + relay.dt.ip + ' A  (@ ' + bv + ' kV)', ind + 3, y); y += 4;
     doc.text('td: ' + relay.dt.td + ' s', ind + 3, y);
   }
@@ -184,7 +184,7 @@ function drawCDBox(doc, cd, bx, by, bw) {
 
   // Pre-compute wrapped settings lines for dynamic box height
   const settRaw = cd.settings && cd.settings.trim() ? cd.settings.trim() : '';
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
   const settLines = settRaw ? doc.splitTextToSize(settRaw, bw - 8) : [];
   const LINE_H    = 4.5;
   const bh        = 19 + settLines.length * LINE_H + 3;
@@ -198,15 +198,15 @@ function drawCDBox(doc, cd, bx, by, bw) {
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   doc.text(cd.name, bx + 3, by + 5);
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   const typeStr = cd.deviceType ? cd.deviceType + '  |  ' : '';
   doc.text(typeStr + (cd.en ? 'ENABLED' : 'DISABLED'), bx + bw - 3, by + 5, { align: 'right' });
 
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(60, 60, 60);
   doc.text('Custom scatter curve — ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''), bx + 4, by + 13);
 
   if (settLines.length > 0) {
-    doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(50, 50, 50);
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(50, 50, 50);
     doc.text(settLines, bx + 4, by + 19, { lineHeightFactor: 1.5 });
   }
   return bh;
@@ -265,7 +265,7 @@ function addSettingsPage(doc) {
       const fx     = MAR + (i % 5) * colFW;
       const active = fl.en !== false;
       doc.setFont('helvetica', active ? 'bold' : 'normal');
-      doc.setFontSize(8.5);
+      doc.setFontSize(9);
       doc.setTextColor(active ? 40 : 150, active ? 40 : 150, active ? 40 : 150);
       doc.text(fl.label + ': ' + fl.a.toLocaleString() + ' A', fx, y);
     });

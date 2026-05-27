@@ -344,12 +344,12 @@ export function render() {
         x:{ type:'logarithmic', min:zoomState.xMin, max:zoomState.xMax,
           title:{display:true,text:xLabel,color:'#333',font:{size:14}},
           afterBuildTicks:ax=>{const mn=zoomState.xMin,mx=zoomState.xMax;ax.ticks=xTicks().filter(t=>t.value>=mn*0.95&&t.value<=mx*1.05);},
-          ticks:{color:'#444',font:{size:12},maxRotation:0,callback(v){let m=null;for(const lv of X_LABEL){if(Math.abs(v/lv-1)<0.01){m=lv;break;}}if(!m)return '';return xUnit==='A'?(m>=1000?(m/1000)+'k':String(m)):fmtKA(m);}},
+          ticks:{color:'#444',font:{size:13},maxRotation:0,callback(v){let m=null;for(const lv of X_LABEL){if(Math.abs(v/lv-1)<0.01){m=lv;break;}}if(!m)return '';return xUnit==='A'?(m>=1000?(m/1000)+'k':String(m)):fmtKA(m);}},
           grid:{display:false}},
         y:{ type:'logarithmic', min:zoomState.yMin, max:zoomState.yMax,
           title:{display:true,text:'Trip time (s)',color:'#333',font:{size:14}},
           afterBuildTicks:ax=>{const mn=zoomState.yMin,mx=zoomState.yMax;ax.ticks=yTicks().filter(t=>t.value>=mn*0.9&&t.value<=mx*1.1);},
-          ticks:{color:'#444',font:{size:12},autoSkip:false,callback(v){for(const lv of Y_LABEL){if(Math.abs(v/lv-1)<0.01)return String(lv);}return '';}},
+          ticks:{color:'#444',font:{size:13},autoSkip:false,callback(v){for(const lv of Y_LABEL){if(Math.abs(v/lv-1)<0.01)return String(lv);}return '';}},
           grid:{display:false}}
       }
     }
