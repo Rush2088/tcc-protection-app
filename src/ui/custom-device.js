@@ -58,10 +58,12 @@ export function getCustomDevices() {
     const nameEl = document.getElementById('cd' + i + '-name');
     const colEl  = document.getElementById('cd' + i + '-color');
     return {
-      name:   nameEl ? nameEl.value  : cd.name,
-      en:     enEl   ? enEl.checked  : cd.en,
-      color:  colEl  ? colEl.value   : cd.color,
-      points: cd.points,
+      name:       nameEl ? nameEl.value : cd.name,
+      en:         enEl   ? enEl.checked : cd.en,
+      color:      colEl  ? colEl.value  : cd.color,
+      points:     cd.points,
+      settings:   cd.settings   || '',
+      deviceType: cd.deviceType || '',
     };
   });
 }
@@ -108,6 +110,11 @@ export function openCDModal(idx) {
     const nameEl = document.getElementById('cd' + idx + '-name');
     titleEl.textContent = 'Edit Points — ' + (nameEl ? nameEl.value : customDevices[idx].name);
   }
+  // Populate Device Type + Settings fields
+  const typeEl = document.getElementById('cd-modal-type');
+  const settEl = document.getElementById('cd-modal-settings');
+  if (typeEl) typeEl.value = customDevices[idx].deviceType || '';
+  if (settEl) settEl.value = customDevices[idx].settings   || '';
   rebuildTable();
   document.getElementById('cd-modal').style.display = 'flex';
 }
@@ -118,6 +125,11 @@ export function closeCDModal() {
 
 export function saveCDModal() {
   customDevices[_cdEditIdx].points = _cdTmpPts.filter(p => p.i > 0 && p.t >= 0);
+  // Save Device Type + Settings from modal fields
+  const typeEl = document.getElementById('cd-modal-type');
+  const settEl = document.getElementById('cd-modal-settings');
+  if (typeEl) customDevices[_cdEditIdx].deviceType = typeEl.value.trim();
+  if (settEl) customDevices[_cdEditIdx].settings   = settEl.value.trim();
   const el = document.getElementById('cd' + _cdEditIdx + '-ptcount');
   if (el) el.textContent = customDevices[_cdEditIdx].points.length + ' pts';
   closeCDModal();

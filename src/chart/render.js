@@ -31,16 +31,16 @@ function svgLine(color, dash) {
 }
 function updateLegend(relays, cds) {
   const leg = document.getElementById('chart-legend'); if (!leg) return;
-  let rows = '';
+  // Left col: relays; Right col: custom devices (row 1) + damage curves (row 2)
+  let leftRows = '', rightRows = '';
   relays.forEach(relay => {
     if (!relay.en) return;
-    rows += '<tr><td>'+svgLine(relay.color)+'</td><td class="leg-name">'+relay.name+'</td><td class="leg-settings">'+relaySettingsStr(relay)+'</td></tr>';
+    leftRows += '<tr data-leg="relay"><td>'+svgLine(relay.color)+'</td><td class="leg-name">'+relay.name+'</td><td class="leg-settings">'+relaySettingsStr(relay)+'</td></tr>';
   });
   cds.forEach((cd, i) => {
     if (!cd.en || !cd.points.length) return;
-    const settingsEl = document.getElementById('cd'+i+'-settings');
-    const txt = settingsEl ? settingsEl.value.trim() : '';
-    rows += '<tr><td>'+svgLine(cd.color)+'</td><td class="leg-name">'+cd.name+'</td><td class="leg-settings">'+txt+'</td></tr>';
+    const txt = cd.settings || '';   // reads from state, not DOM
+    rightRows += '<tr data-leg="cd"><td>'+svgLine(cd.color)+'</td><td class="leg-name">'+cd.name+'</td><td class="leg-settings">'+txt+'</td></tr>';
   });
   if (window.tdcParentEn !== false) {
     thermalCables.forEach((tc, i) => {
@@ -49,7 +49,7 @@ function updateLegend(relays, cds) {
       const en=enEl?enEl.checked:tc.en, area=areaEl?(parseFloat(areaEl.value)||tc.area):tc.area;
       const col=colEl?colEl.value:tc.color, nm=nameEl?nameEl.value:tc.name;
       if (!en) return;
-      rows += '<tr><td>'+svgLine(col,'4 2')+'</td><td class="leg-name">'+nm+'</td><td class="leg-settings">Thermal damage curve — '+area+'mm²</td></tr>';
+      rightRows += '<tr data-leg="damage"><td>'+svgLine(col,'4 2')+'</td><td class="leg-name">'+nm+'</td><td class="leg-settings">Thermal damage curve — '+area+'mm²</td></tr>';
     });
     thermalTransformers.forEach((tx, i) => {
       const enEl=document.getElementById('tx'+i+'-en'), mvaEl=document.getElementById('tx'+i+'-mva');
@@ -57,10 +57,13 @@ function updateLegend(relays, cds) {
       const en=enEl?enEl.checked:tx.en, mva=mvaEl?(parseFloat(mvaEl.value)||tx.mva):tx.mva;
       const col=colEl?colEl.value:tx.color, nm=nameEl?nameEl.value:tx.name;
       if (!en) return;
-      rows += '<tr><td>'+svgLine(col,'5 3')+'</td><td class="leg-name">'+nm+'</td><td class="leg-settings">Transformer thermal damage — '+mva+' MVA</td></tr>';
+      rightRows += '<tr data-leg="damage"><td>'+svgLine(col,'5 3')+'</td><td class="leg-name">'+nm+'</td><td class="leg-settings">Transformer thermal damage — '+mva+' MVA</td></tr>';
     });
   }
-  leg.innerHTML = rows ? '<table>'+rows+'</table>' : '';
+  if (!leftRows && !rightRows) { leg.innerHTML = ''; return; }
+  const leftHtml  = leftRows  ? '<table>'+leftRows+'</table>'  : '';
+  const rightHtml = rightRows ? '<table>'+rightRows+'</table>' : '';
+  leg.innerHTML = '<div class="leg-col">'+leftHtml+'</div><div class="leg-col">'+rightHtml+'</div>';
 }
 
 export function render() {
