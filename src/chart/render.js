@@ -31,7 +31,6 @@ function svgLine(color, dash) {
 }
 function updateLegend(relays, cds) {
   const leg = document.getElementById('chart-legend'); if (!leg) return;
-  // Left col: relays; Right col: custom devices (row 1) + damage curves (row 2)
   let leftRows = '', rightRows = '';
   relays.forEach(relay => {
     if (!relay.en) return;
@@ -39,7 +38,7 @@ function updateLegend(relays, cds) {
   });
   cds.forEach((cd, i) => {
     if (!cd.en || !cd.points.length) return;
-    const txt = cd.settings || '';   // reads from state, not DOM
+    const txt = cd.settings || '';
     rightRows += '<tr data-leg="cd"><td>'+svgLine(cd.color)+'</td><td class="leg-name">'+cd.name+'</td><td class="leg-settings">'+txt+'</td></tr>';
   });
   if (window.tdcParentEn !== false) {
@@ -64,6 +63,141 @@ function updateLegend(relays, cds) {
   const leftHtml  = leftRows  ? '<table>'+leftRows+'</table>'  : '';
   const rightHtml = rightRows ? '<table>'+rightRows+'</table>' : '';
   leg.innerHTML = '<div class="leg-col">'+leftHtml+'</div><div class="leg-col">'+rightHtml+'</div>';
+}
+
+// ── Hover: snap cursor to nearest visible curve, show I and t ─────────────────
+function setupHover(canvasEl) {
+  if (canvasEl.dataset.hoverSetup) return;
+  canvasEl.dataset.hoverSetup = '1';
+
+  const wrap = canvasEl.parentElement;
+  if (wrap) wrap.style.position = 'relative';
+
+  // Tooltip label
+  let tip = document.getElementById('tcc-hover-tip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'tcc-hover-tip';
+    tip.style.cssText = [
+      'position:absolute', 'pointer-events:none', 'display:none',
+      'background:rgba(20,20,20,0.82)', 'color:#fff',
+      'padding:3px 8px', 'border-radius:4px',
+      'font:bold 12px/1.6 Arial,sans-serif', 'white-space:nowrap', 'z-index:100',
+      'box-shadow:0 1px 4px rgba(0,0,0,0.3)'
+    ].join(';');
+    if (wrap) wrap.appendChild(tip);
+  }
+
+  // Snap dot
+  let dot = document.getElementById('tcc-hover-dot');
+  if (!dot) {
+    dot = document.createElement('div');
+    dot.id = 'tcc-hover-dot';
+    dot.style.cssText = [
+      'position:absolute', 'pointer-events:none', 'display:none',
+      'width:8px', 'height:8px', 'border-radius:50%',
+      'border:2px solid #fff', 'margin:-4px 0 0 -4px', 'z-index:101',
+      'box-shadow:0 0 3px rgba(0,0,0,0.4)'
+    ].join(';');
+    if (wrap) wrap.appendChild(dot);
+  }
+
+  canvasEl.addEventListener('mousemove', (e) => {
+    const chart = window._tccChart;
+    if (!chart) return;
+
+    const rect = canvasEl.getBoundingClientRect();
+    const mx   = e.clientX - rect.left;
+    const my   = e.clientY - rect.top;
+
+    const ca = chart.chartArea;
+    if (!ca || mx < ca.left || mx > ca.right || my < ca.top || my > ca.bottom) {
+      tip.style.display = 'none';
+      dot.style.display = 'none';
+      return;
+    }
+
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+    if (!xScale || !yScale) return;
+
+    const mouseI = xScale.getValueForPixel(mx);
+    if (!mouseI || mouseI <= 0) return;
+
+    // Find nearest curve at this I value (closest vertical pixel distance)
+    let bestDist = Infinity, bestPx = null, bestPy = null, bestColor = '#888';
+
+    chart.data.datasets.forEach(ds => {
+      if (!ds.data || ds.data.length < 2) return;
+      const pts = ds.data.filter(p => p.x > 0 && p.y > 0);
+      if (pts.length < 2) return;
+
+      // Log-log interpolate t at mouseI
+      for (let k = 0; k < pts.length - 1; k++) {
+        const p1 = pts[k], p2 = pts[k + 1];
+        if (mouseI < p1.x || mouseI > p2.x) continue;
+        if (p1.x <= 0 || p2.x <= 0 || p1.y <= 0 || p2.y <= 0) continue;
+
+        const logI  = Math.log(mouseI);
+        const logI1 = Math.log(p1.x), logI2 = Math.log(p2.x);
+        const logT1 = Math.log(p1.y), logT2 = Math.log(p2.y);
+        const frac  = (logI - logI1) / (logI2 - logI1);
+        const logT  = logT1 + frac * (logT2 - logT1);
+        const tInterp = Math.exp(logT);
+        if (!isFinite(tInterp) || tInterp <= 0) break;
+
+        const px   = xScale.getPixelForValue(mouseI);
+        const py   = yScale.getPixelForValue(tInterp);
+        const dist = Math.abs(my - py);
+
+        if (dist < bestDist) {
+          bestDist  = dist;
+          bestPx    = px;
+          bestPy    = py;
+          bestColor = typeof ds.borderColor === 'string' ? ds.borderColor : '#888';
+        }
+        break;
+      }
+    });
+
+    // Only snap if within ~50 CSS px of a curve
+    if (bestPx === null || bestDist > 50) {
+      tip.style.display = 'none';
+      dot.style.display = 'none';
+      return;
+    }
+
+    const snapI = xScale.getValueForPixel(bestPx);
+    const snapT = yScale.getValueForPixel(bestPy);
+
+    const iStr = snapI >= 1000
+      ? (snapI / 1000).toFixed(snapI >= 10000 ? 1 : 2) + ' kA'
+      : Math.round(snapI) + ' A';
+    const tStr = snapT < 0.1
+      ? Math.round(snapT * 1000) + ' ms'
+      : snapT < 10 ? snapT.toFixed(3) + ' s'
+      : snapT.toFixed(1) + ' s';
+
+    tip.textContent   = iStr + '  |  ' + tStr;
+    tip.style.display = 'block';
+
+    // Position tooltip above-right; nudge left near right edge
+    const wrapW = wrap ? wrap.offsetWidth : canvasEl.offsetWidth;
+    const tipW  = tip.offsetWidth || 120;
+    const tx    = (bestPx + tipW + 20 < wrapW) ? bestPx + 12 : bestPx - tipW - 12;
+    tip.style.left = tx + 'px';
+    tip.style.top  = (bestPy - 26) + 'px';
+
+    dot.style.display    = 'block';
+    dot.style.left       = bestPx + 'px';
+    dot.style.top        = bestPy + 'px';
+    dot.style.background = bestColor;
+  });
+
+  canvasEl.addEventListener('mouseleave', () => {
+    tip.style.display = 'none';
+    dot.style.display = 'none';
+  });
 }
 
 export function render() {
@@ -209,5 +343,8 @@ export function render() {
       }
     }
   });
-  window._tccChart=myChart;
+  window._tccChart = myChart;
+
+  // Set up hover snap (once per canvas — survives chart destroy/recreate)
+  setupHover(document.getElementById('tcc'));
 }
