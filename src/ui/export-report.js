@@ -1,10 +1,7 @@
 /**
  * export-report.js  Two-page PDF report
- *   Page 1: A4 landscape - TCC chart + title + legend + base voltage
- *   Page 2: A4 landscape - Settings, relay boxes side-by-side, fault levels
- *
- * Fixes: JPEG chart (small file), no Unicode bullets (broke font rendering),
- *        side-by-side relay boxes, custom relay names, base voltage shown.
+ *   Page 1: A4 landscape - TCC chart + title + 2-col legend (with settings text)
+ *   Page 2: A4 landscape - Settings, relay boxes, custom device boxes with settings
  */
 
 import { faultLevels, customDevices } from '../state.js';
@@ -24,13 +21,21 @@ function hexToRgb(hex) {
   return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
 }
 
+// Read legend entries from the dynamic #chart-legend element (same source as PNG export)
 function legendItems() {
   const items = [];
-  document.querySelectorAll('.leg-item').forEach(el => {
-    if (el.style.display === 'none') return;
-    const line = el.querySelector('line');
-    const span = el.querySelector('span');
-    if (line && span) items.push({ color: line.getAttribute('stroke'), label: span.textContent.trim() });
+  const leg = document.getElementById('chart-legend');
+  if (!leg) return items;
+  leg.querySelectorAll('tr').forEach(tr => {
+    const lineEl = tr.querySelector('line');
+    const nameEl = tr.querySelector('.leg-name');
+    const settEl = tr.querySelector('.leg-settings');
+    if (lineEl && nameEl) items.push({
+      color:    lineEl.getAttribute('stroke') || '#333',
+      dash:     lineEl.getAttribute('stroke-dasharray') || '',
+      label:    nameEl.textContent.trim(),
+      settings: settEl ? settEl.textContent.trim() : ''
+    });
   });
   return items;
 }
@@ -38,12 +43,12 @@ function legendItems() {
 const domVal   = id => { const e = document.getElementById(id); return e ? e.value   : ''; };
 const domProj  = ()  => domVal('projName') || 'TCC Protection Coordination Study';
 const domBaseV = ()  => domVal('baseV') || '?';
-const domChk = id => { const e = document.getElementById(id); return e ? e.checked : false; };
+const domChk   = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 
 // ---- Page 1: Landscape - TCC Chart ------------------------------------------
 function addChartPage(doc) {
-  const PW = doc.internal.pageSize.getWidth();
-  const PH = doc.internal.pageSize.getHeight();
+  const PW   = doc.internal.pageSize.getWidth();
+  const PH   = doc.internal.pageSize.getHeight();
   const proj = domProj();
   const bv   = domBaseV();
 
@@ -62,25 +67,41 @@ function addChartPage(doc) {
   doc.setLineWidth(0.4);
   doc.line(MAR, MAR + 6, PW - MAR, MAR + 6);
 
-  // Legend
+  // Legend - 2 columns matching the web layout; each row: swatch | name bold | settings grey
   const items = legendItems();
   let legY = MAR + 11;
   if (items.length) {
-    doc.setFontSize(8.5);
-    let lx = MAR;
-    items.forEach(item => {
-      const [r, g, b] = hexToRgb(item.color);
-      doc.setDrawColor(r, g, b);
-      doc.setLineWidth(1.2);
-      doc.line(lx, legY, lx + 12, legY);
-      doc.setTextColor(40, 40, 40);
-      doc.text(item.label, lx + 15, legY + 1);
-      lx += 15 + doc.getTextWidth(item.label) + 8;
-    });
-    legY += 7;
+    const ROW_H = 5.5;
+    const colW  = (PW - 2 * MAR) / 2;
+    const half  = Math.ceil(items.length / 2);
+    const col1  = items.slice(0, half);
+    const col2  = items.slice(half);
+
+    function drawLegCol(list, xBase) {
+      list.forEach((item, idx) => {
+        const iy = legY + idx * ROW_H;
+        const [r, g, b] = hexToRgb(item.color);
+        doc.setDrawColor(r, g, b);
+        doc.setLineWidth(1.2);
+        doc.line(xBase, iy, xBase + 12, iy);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(40, 40, 40);
+        doc.text(item.label, xBase + 15, iy + 1);
+        if (item.settings) {
+          const nameW = doc.getTextWidth(item.label + '  ');
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(90, 90, 90);
+          doc.text(item.settings, xBase + 15 + nameW, iy + 1);
+        }
+      });
+    }
+
+    drawLegCol(col1, MAR);
+    drawLegCol(col2, MAR + colW);
+    legY += Math.max(col1.length, col2.length) * ROW_H + 3;
   }
 
-  // Chart as JPEG - keeps file well under 1 MB
   const canvas  = document.getElementById('tcc');
   const imgData = canvas.toDataURL('image/jpeg', 0.82);
   doc.addImage(imgData, 'JPEG', MAR, legY + 1, PW - 2*MAR, PH - legY - 1 - MAR);
@@ -108,25 +129,16 @@ function drawStageBlock(doc, en, title, x, y) {
 function drawRelayBox(doc, relay, bx, by, bw, bv) {
   const [cr, cg, cb] = hexToRgb(relay.color);
   const bh = relayBoxH(relay);
-
-  doc.setDrawColor(cr, cg, cb);
-  doc.setLineWidth(0.5);
+  doc.setDrawColor(cr, cg, cb); doc.setLineWidth(0.5);
   doc.rect(bx, by, bw, bh);
-
   doc.setFillColor(cr, cg, cb);
   doc.rect(bx, by, bw, 8, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(255, 255, 255);
   doc.text(relay.name, bx + 3, by + 5.5);
   doc.setFontSize(8);
   doc.text(relay.en ? 'ENABLED' : 'DISABLED', bx + bw - 3, by + 5.5, { align: 'right' });
-
   let y = by + 11;
   const ind = bx + 4;
-
-  // Stage 1 IDMT
   y = drawStageBlock(doc, relay.s1.en, 'Stage 1 - IDMT', ind, y);
   if (relay.s1.en) {
     doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(8.5);
@@ -134,8 +146,6 @@ function drawRelayBox(doc, relay, bx, by, bw, bv) {
     doc.text('TMS: ' + relay.s1.tms, ind + 3, y); y += 4;
     doc.text('Curve: ' + (CURVE_NAMES[relay.s1.ct] || relay.s1.ct), ind + 3, y); y += 5;
   }
-
-  // Stage 2 IDMT
   y = drawStageBlock(doc, relay.s2.en, 'Stage 2 - IDMT', ind, y);
   if (relay.s2.en) {
     doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(8.5);
@@ -143,8 +153,6 @@ function drawRelayBox(doc, relay, bx, by, bw, bv) {
     doc.text('TMS: ' + relay.s2.tms, ind + 3, y); y += 4;
     doc.text('Curve: ' + (CURVE_NAMES[relay.s2.ct] || relay.s2.ct), ind + 3, y); y += 5;
   }
-
-  // Stage 2 DT
   y = drawStageBlock(doc, relay.dt.en, 'Stage 2 - DT', ind, y);
   if (relay.dt.en) {
     doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 60); doc.setFontSize(8.5);
@@ -155,7 +163,8 @@ function drawRelayBox(doc, relay, bx, by, bw, bv) {
 
 function drawCDBox(doc, cd, bx, by, bw) {
   const [cr, cg, cb] = hexToRgb(cd.color || '#888888');
-  const bh = 28;
+  const hasSettings  = cd.settings && cd.settings.trim();
+  const bh           = hasSettings ? 35 : 28;
   doc.setDrawColor(cr, cg, cb); doc.setLineWidth(0.5);
   doc.rect(bx, by, bw, bh);
   doc.setFillColor(cr, cg, cb);
@@ -163,36 +172,37 @@ function drawCDBox(doc, cd, bx, by, bw) {
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   doc.text(cd.name, bx + 3, by + 5);
   doc.setFontSize(8);
-  doc.text(cd.en ? 'ENABLED' : 'DISABLED', bx + bw - 3, by + 5, { align: 'right' });
+  // Show device type + enable status in header band
+  const typeStr = cd.deviceType ? cd.deviceType + '  |  ' : '';
+  doc.text(typeStr + (cd.en ? 'ENABLED' : 'DISABLED'), bx + bw - 3, by + 5, { align: 'right' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(60, 60, 60);
-  doc.text('Custom scatter curve - ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''), bx + 4, by + 13);
+  doc.text(
+    'Custom scatter curve - ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''),
+    bx + 4, by + 13
+  );
+  if (hasSettings) {
+    doc.setFontSize(8); doc.setTextColor(50, 50, 50);
+    doc.text('Settings: ' + cd.settings, bx + 4, by + 20);
+  }
   return bh;
 }
 
 function addSettingsPage(doc) {
   doc.addPage([297, 210], 'landscape');
-  const PW = 297;
+  const PW   = 297;
   const bv   = domBaseV();
   const proj = domProj();
   let y = MAR;
-
-  // Page header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(26, 58, 92);
-  doc.text(proj + ' — Protection Settings', MAR, y);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(80, 80, 80);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(26, 58, 92);
+  doc.text(proj + ' - Protection Settings', MAR, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(80, 80, 80);
   doc.text('Base: ' + bv + ' kV', PW - MAR, y, { align: 'right' });
   y += 5;
   doc.setDrawColor(180, 195, 210); doc.setLineWidth(0.4);
   doc.line(MAR, y, PW - MAR, y);
   y += 5;
 
-  // Side-by-side relay boxes
-  const colW = (PW - 2 * MAR - 6) / 2;
+  const colW  = (PW - 2 * MAR - 6) / 2;
   const col1X = MAR;
   const col2X = MAR + colW + 6;
   const relays = getRelays();
@@ -201,23 +211,24 @@ function addSettingsPage(doc) {
   if (relays[1]) drawRelayBox(doc, relays[1], col2X, y, colW, bv);
   y += Math.max(relayBoxH(relays[0]), relays[1] ? relayBoxH(relays[1]) : 0) + 5;
 
-  // Custom devices (only if enabled or have points)
+  // Custom devices - include settings and deviceType from state
   const cds = customDevices.map((cd, i) => ({
-    name:   domVal('cd' + i + '-name') || cd.name,
-    en:     domChk('cd' + i + '-en'),
-    color:  domVal('cd' + i + '-color') || cd.color,
-    points: cd.points
+    name:       domVal('cd' + i + '-name') || cd.name,
+    en:         domChk('cd' + i + '-en'),
+    color:      domVal('cd' + i + '-color') || cd.color,
+    points:     cd.points,
+    settings:   cd.settings   || '',
+    deviceType: cd.deviceType || ''
   })).filter(cd => cd.en || cd.points.length > 0);
 
   if (cds.length) {
     for (let ci = 0; ci < cds.length; ci += 2) {
-      drawCDBox(doc, cds[ci],     ci === 0 ? col1X : col1X, y, colW);
-      if (cds[ci + 1]) drawCDBox(doc, cds[ci + 1], col2X, y, colW);
-      y += 33;
+      const h1 = drawCDBox(doc, cds[ci],           col1X, y, colW);
+      const h2 = cds[ci + 1] ? drawCDBox(doc, cds[ci + 1], col2X, y, colW) : 0;
+      y += Math.max(h1, h2) + 5;
     }
   }
 
-  // Fault Levels table
   if (faultLevels.length) {
     doc.setFontSize(9.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(26, 58, 92);
     doc.text('Fault Levels', MAR, y); y += 5;
@@ -240,5 +251,5 @@ export function exportReport() {
   const doc   = new JsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   addChartPage(doc);
   addSettingsPage(doc);
-  doc.save('TCC_' + domProj().replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf');
+  doc.save('TCC_' + domProj().replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf');
 }
