@@ -1,59 +1,114 @@
-// PNG export — composites legend bar above chart canvas
+// PNG export — title at top, chart in middle, 2-col legend at bottom
 export function exportPNG() {
   const chartCanvas = document.getElementById('tcc');
-  const bv          = document.getElementById('baseV').value || '33';
+  const bv   = (document.getElementById('baseV')   || {}).value || '33';
+  const proj = (document.getElementById('projName') || {}).value || 'TCC Protection Coordination Study';
 
-  // Collect visible legend entries from the HTML legend bar
+  // Collect legend entries from #chart-legend (same source as PDF export)
   const items = [];
-  document.querySelectorAll('.leg-item').forEach(el => {
-    if (el.style.display === 'none') return;
-    const line = el.querySelector('line');
-    const span = el.querySelector('span');
-    if (!line || !span) return;
-    items.push({ color: line.getAttribute('stroke'), label: span.textContent.trim() });
-  });
+  const leg = document.getElementById('chart-legend');
+  if (leg) {
+    leg.querySelectorAll('tr').forEach(tr => {
+      const lineEl = tr.querySelector('line');
+      const nameEl = tr.querySelector('.leg-name');
+      const settEl = tr.querySelector('.leg-settings');
+      if (lineEl && nameEl) items.push({
+        color:    lineEl.getAttribute('stroke') || '#333',
+        dash:     lineEl.getAttribute('stroke-dasharray') || '',
+        label:    nameEl.textContent.trim(),
+        settings: settEl ? settEl.textContent.trim() : ''
+      });
+    });
+  }
 
   const W       = chartCanvas.width;
   const H       = chartCanvas.height;
   const PAD     = 16;
-  const LEG_H   = items.length ? 38 : 0;
+  const TITLE_H = 36;
+  const ROW_H   = 22;
+  const half    = Math.ceil(items.length / 2);
+  const legRows = items.length ? half : 0;
+  const LEG_H   = legRows ? legRows * ROW_H + 14 : 0;
 
   const out = document.createElement('canvas');
   out.width  = W;
-  out.height = H + LEG_H;
-  const ctx = out.getContext('2d');
+  out.height = TITLE_H + H + LEG_H;
+  const ctx  = out.getContext('2d');
 
   // White background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, out.height);
 
-  // Legend bar
-  if (LEG_H) {
-    ctx.font = '13px Arial, sans-serif';
-    let x = PAD;
-    const midY = LEG_H / 2;
-    items.forEach(item => {
-      // Coloured line swatch
-      ctx.strokeStyle = item.color;
-      ctx.lineWidth   = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(x, midY);
-      ctx.lineTo(x + 22, midY);
-      ctx.stroke();
-      x += 28;
-      // Label text
-      ctx.fillStyle = '#333333';
-      ctx.fillText(item.label, x, midY + 4);
-      x += ctx.measureText(item.label).width + 18;
-    });
+  // Title at top
+  ctx.fillStyle = '#1a3a5c';
+  ctx.font = 'bold 15px Arial, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(proj, PAD, 22);
+
+  // Divider below title
+  ctx.strokeStyle = '#c8d2dc';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(PAD, TITLE_H - 4);
+  ctx.lineTo(W - PAD, TITLE_H - 4);
+  ctx.stroke();
+
+  // Chart canvas in middle
+  ctx.drawImage(chartCanvas, 0, TITLE_H);
+
+  // Legend at bottom - 2 columns
+  if (legRows) {
+    const col1 = items.slice(0, half);
+    const col2 = items.slice(half);
+    const colW = (W - 2 * PAD) / 2;
+    const legTop = TITLE_H + H;
+
+    // Divider above legend
+    ctx.strokeStyle = '#c8d2dc';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD, legTop + 4);
+    ctx.lineTo(W - PAD, legTop + 4);
+    ctx.stroke();
+
+    function drawCol(list, xBase) {
+      list.forEach((item, idx) => {
+        const iy = legTop + 14 + idx * ROW_H;
+        // Colour swatch line
+        const dashParts = item.dash
+          ? item.dash.split(' ').map(Number).filter(n => !isNaN(n) && n > 0)
+          : [];
+        ctx.setLineDash(dashParts.length >= 2 ? dashParts : []);
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth   = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(xBase, iy);
+        ctx.lineTo(xBase + 24, iy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Name (bold) + settings (grey) on the same baseline
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.fillStyle = '#282828';
+        ctx.fillText(item.label, xBase + 30, iy + 4);
+
+        if (item.settings) {
+          const nameW = ctx.measureText(item.label + '  ').width;
+          ctx.font      = '11px Arial, sans-serif';
+          ctx.fillStyle = '#666666';
+          ctx.fillText(item.settings, xBase + 30 + nameW, iy + 4);
+        }
+      });
+    }
+
+    drawCol(col1, PAD);
+    drawCol(col2, PAD + colW);
   }
 
-  // Chart canvas below legend
-  ctx.drawImage(chartCanvas, 0, LEG_H);
-
-  const link     = document.createElement('a');
-  link.download  = 'TCC_' + bv + 'kV.png';
-  link.href      = out.toDataURL('image/png');
+  const link    = document.createElement('a');
+  link.download = 'TCC_' + bv + 'kV.png';
+  link.href     = out.toDataURL('image/png');
   link.click();
 
   // Silently copy to clipboard in parallel
