@@ -1,6 +1,6 @@
 /**
  * export-report.js  Two-page PDF report
- *   Page 1: A4 landscape - title at top, TCC chart fills middle, 2-col legend at bottom
+ *   Page 1: A4 landscape - title centred at top, TCC chart fills middle, 2-col legend at bottom
  *   Page 2: A4 landscape - Settings, relay boxes, custom device boxes with settings
  */
 
@@ -45,17 +45,17 @@ const domProj  = ()  => domVal('projName') || 'TCC Protection Coordination Study
 const domBaseV = ()  => domVal('baseV') || '?';
 const domChk   = id => { const e = document.getElementById(id); return e ? e.checked : false; };
 
-// ---- Page 1: title top, chart middle, legend bottom -------------------------
+// ---- Page 1: title centred top, chart middle, legend bottom -----------------
 function addChartPage(doc) {
   const PW   = doc.internal.pageSize.getWidth();
   const PH   = doc.internal.pageSize.getHeight();
   const proj = domProj();
 
-  // Title at top
+  // Title centred at top
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(26, 58, 92);
-  doc.text(proj, MAR, MAR);
+  doc.text(proj, PW / 2, MAR, { align: 'center' });
 
   const dateStr = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
   doc.setFont('helvetica', 'normal');
@@ -69,12 +69,12 @@ function addChartPage(doc) {
 
   const chartTop = MAR + 10;
 
-  // Pre-calculate legend height so we can size the chart accordingly
-  const items  = legendItems();
-  const ROW_H  = 5.5;
-  const half   = Math.ceil(items.length / 2);
+  // Pre-calculate legend height — each row: name line + settings line = ROW_H
+  const items   = legendItems();
+  const ROW_H   = 10.5;   // enough for 9.5pt name + 9.5pt settings on separate lines
+  const half    = Math.ceil(items.length / 2);
   const legRows = items.length ? half : 0;
-  const LEG_H  = legRows ? legRows * ROW_H + 9 : 0;  // rows + padding above
+  const LEG_H   = legRows ? legRows * ROW_H + 9 : 0;
 
   // Chart fills space between title area and legend area
   const chartBottom = PH - MAR - LEG_H;
@@ -86,10 +86,10 @@ function addChartPage(doc) {
 
   // Legend at bottom
   if (items.length) {
-    const legY  = chartBottom + 4;   // small gap after chart
-    const colW  = (PW - 2 * MAR) / 2;
-    const col1  = items.slice(0, half);
-    const col2  = items.slice(half);
+    const legY = chartBottom + 4;
+    const colW = (PW - 2 * MAR) / 2;
+    const col1 = items.slice(0, half);
+    const col2 = items.slice(half);
 
     // Thin divider above legend
     doc.setDrawColor(200, 210, 220);
@@ -98,20 +98,24 @@ function addChartPage(doc) {
 
     function drawLegCol(list, xBase) {
       list.forEach((item, idx) => {
-        const iy = legY + idx * ROW_H;
+        const iy = legY + idx * ROW_H + 3;   // +3 = top padding within row
         const [r, g, b] = hexToRgb(item.color);
         doc.setDrawColor(r, g, b);
-        doc.setLineWidth(1.2);
-        doc.line(xBase, iy, xBase + 12, iy);
+        doc.setLineWidth(1.4);
+        doc.line(xBase, iy, xBase + 14, iy);
+
+        // Name — bold 9.5pt
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
+        doc.setFontSize(9.5);
         doc.setTextColor(40, 40, 40);
-        doc.text(item.label, xBase + 15, iy + 1);
+        doc.text(item.label, xBase + 17, iy + 1);
+
+        // Settings on second line — normal 9.5pt (same size, lighter colour)
         if (item.settings) {
-          const nameW = doc.getTextWidth(item.label + '  ');
           doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9.5);
           doc.setTextColor(90, 90, 90);
-          doc.text(item.settings, xBase + 15 + nameW, iy + 1);
+          doc.text(item.settings, xBase + 17, iy + 5.5);
         }
       });
     }
@@ -177,22 +181,33 @@ function drawRelayBox(doc, relay, bx, by, bw, bv) {
 
 function drawCDBox(doc, cd, bx, by, bw) {
   const [cr, cg, cb] = hexToRgb(cd.color || '#888888');
-  const hasSettings  = cd.settings && cd.settings.trim();
-  const bh           = hasSettings ? 35 : 28;
+
+  // Pre-compute wrapped settings lines for dynamic box height
+  const settRaw = cd.settings && cd.settings.trim() ? cd.settings.trim() : '';
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5);
+  const settLines = settRaw ? doc.splitTextToSize(settRaw, bw - 8) : [];
+  const LINE_H    = 4.5;
+  const bh        = 19 + settLines.length * LINE_H + 3;
+  // 19 = 7 (header bar) + 12 (space to pt-count line at by+13 plus gap)
+  // settLines * 4.5 mm each + 3 mm bottom padding
+
   doc.setDrawColor(cr, cg, cb); doc.setLineWidth(0.5);
   doc.rect(bx, by, bw, bh);
   doc.setFillColor(cr, cg, cb);
   doc.rect(bx, by, bw, 7, 'F');
+
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255, 255, 255);
   doc.text(cd.name, bx + 3, by + 5);
   doc.setFontSize(8);
   const typeStr = cd.deviceType ? cd.deviceType + '  |  ' : '';
   doc.text(typeStr + (cd.en ? 'ENABLED' : 'DISABLED'), bx + bw - 3, by + 5, { align: 'right' });
+
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(60, 60, 60);
-  doc.text('Custom scatter curve - ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''), bx + 4, by + 13);
-  if (hasSettings) {
-    doc.setFontSize(8); doc.setTextColor(50, 50, 50);
-    doc.text('Settings: ' + cd.settings, bx + 4, by + 20);
+  doc.text('Custom scatter curve — ' + cd.points.length + ' data point' + (cd.points.length !== 1 ? 's' : ''), bx + 4, by + 13);
+
+  if (settLines.length > 0) {
+    doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(50, 50, 50);
+    doc.text(settLines, bx + 4, by + 19, { lineHeightFactor: 1.5 });
   }
   return bh;
 }
@@ -203,14 +218,18 @@ function addSettingsPage(doc) {
   const bv   = domBaseV();
   const proj = domProj();
   let y = MAR;
+
+  // Title centred
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(26, 58, 92);
-  doc.text(proj + ' - Protection Settings', MAR, y);
+  doc.text(proj + ' — Protection Settings', PW / 2, y, { align: 'center' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(80, 80, 80);
   doc.text('Base: ' + bv + ' kV', PW - MAR, y, { align: 'right' });
+
   y += 5;
   doc.setDrawColor(180, 195, 210); doc.setLineWidth(0.4);
   doc.line(MAR, y, PW - MAR, y);
   y += 5;
+
   const colW  = (PW - 2 * MAR - 6) / 2;
   const col1X = MAR;
   const col2X = MAR + colW + 6;
