@@ -77,12 +77,46 @@ function addChartPage(doc) {
   const LEG_H   = legRows ? legRows * ROW_H + 9 : 0;
 
   // Chart fills space between title area and legend area
-  const chartBottom = PH - MAR - LEG_H;
-  const chartH      = chartBottom - chartTop;
+  const chartBottom     = PH - MAR - LEG_H;
+  const chartH          = chartBottom - chartTop;
+  const pdfChartWidthMm = PW - 2 * MAR;
 
-  const canvas  = document.getElementById('tcc');
-  const imgData = canvas.toDataURL('image/jpeg', 0.82);
+  const canvas = document.getElementById('tcc');
+
+  // Temporarily boost chart font sizes so they look correct at PDF scale.
+  // ptPerPx = how many PDF points one canvas pixel represents.
+  const ptPerPx = (pdfChartWidthMm / 25.4) * 72 / canvas.width;
+  const chart   = window._tccChart;
+  let origSizes = null;
+  if (chart) {
+    const sc = chart.options.scales;
+    origSizes = {
+      xTitle: sc.x.title.font.size,
+      yTitle: sc.y.title.font.size,
+      xTick:  sc.x.ticks.font ? sc.x.ticks.font.size : undefined,
+      yTick:  sc.y.ticks.font ? sc.y.ticks.font.size : undefined,
+    };
+    sc.x.title.font.size = Math.round(12 / ptPerPx);   // target 12 pt in PDF
+    sc.y.title.font.size = Math.round(12 / ptPerPx);
+    if (sc.x.ticks.font) sc.x.ticks.font.size = Math.round(10 / ptPerPx);  // 10 pt
+    if (sc.y.ticks.font) sc.y.ticks.font.size = Math.round(10 / ptPerPx);
+    window._tccPdfAnnotFontPx = Math.round(10 / ptPerPx);  // annotations
+    chart.update('none');
+  }
+
+  const imgData = canvas.toDataURL('image/jpeg', 0.85);
   doc.addImage(imgData, 'JPEG', MAR, chartTop, PW - 2 * MAR, chartH);
+
+  // Restore original sizes
+  if (chart && origSizes) {
+    const sc = chart.options.scales;
+    sc.x.title.font.size = origSizes.xTitle;
+    sc.y.title.font.size = origSizes.yTitle;
+    if (sc.x.ticks.font && origSizes.xTick !== undefined) sc.x.ticks.font.size = origSizes.xTick;
+    if (sc.y.ticks.font && origSizes.yTick !== undefined) sc.y.ticks.font.size = origSizes.yTick;
+    window._tccPdfAnnotFontPx = null;
+    chart.update('none');
+  }
 
   // Legend at bottom
   if (items.length) {

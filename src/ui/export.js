@@ -25,7 +25,7 @@ export function exportPNG() {
   const H       = chartCanvas.height;
   const PAD     = 16;
   const TITLE_H = 36;
-  const ROW_H   = 24;
+  const ROW_H   = 28;
   const half    = Math.ceil(items.length / 2);
   const legRows = items.length ? half : 0;
   const LEG_H   = legRows ? legRows * ROW_H + 14 : 0;
@@ -89,14 +89,14 @@ export function exportPNG() {
 
         // Name bold 13px
         ctx.textAlign = 'left';
-        ctx.font = 'bold 13px Arial, sans-serif';
+        ctx.font = 'bold 15px Arial, sans-serif';
         ctx.fillStyle = '#282828';
         ctx.fillText(item.label, xBase + 34, iy + 4);
 
         // Settings normal 13px — same size as name
         if (item.settings) {
           const nameW = ctx.measureText(item.label + '  ').width;
-          ctx.font      = '13px Arial, sans-serif';
+          ctx.font      = '15px Arial, sans-serif';
           ctx.fillStyle = '#666666';
           ctx.fillText(item.settings, xBase + 34 + nameW, iy + 4);
         }

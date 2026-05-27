@@ -290,7 +290,7 @@ export function render() {
       ctx.beginPath(); ctx.strokeStyle=col; ctx.moveTo(px,ca.top); ctx.lineTo(px,ca.bottom); ctx.stroke();
     });
     ctx.setLineDash([]); ctx.restore();
-    entries.sort((a,b)=>a.px-b.px); ctx.font='bold 12px Arial'; const lvR=[];
+    entries.sort((a,b)=>a.px-b.px); ctx.font='bold '+(window._tccPdfAnnotFontPx||12)+'px Arial'; const lvR=[];
     entries.forEach(e=>{ const w=ctx.measureText(e.lbl).width; let lv=0;
       while(lvR[lv]!==undefined&&e.px+5<lvR[lv]) lv++; e.level=lv; lvR[lv]=e.px+5+w+6;
     });
@@ -309,7 +309,7 @@ export function render() {
         const t=Math.pow(k2*area/imax2,2); if(!isFinite(t)||t<=0) return;
         const lpx=x.getPixelForValue(imax2),lpy=y.getPixelForValue(t);
         if(lpx<ca.left||lpx>ca.right||lpy<ca.top||lpy>ca.bottom) return;
-        ctx.save(); ctx.font='bold 12px Arial'; const tw=ctx.measureText(nm).width;
+        ctx.save(); ctx.font='bold '+(window._tccPdfAnnotFontPx||12)+'px Arial'; const tw=ctx.measureText(nm).width;
         ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(lpx-tw-12,lpy-13,tw+8,16);
         ctx.fillStyle=col; ctx.textAlign='right'; ctx.fillText(nm,lpx-4,lpy); ctx.restore();
       });
@@ -323,7 +323,7 @@ export function render() {
         if(labelI<x.min) return; const t=K1/(labelI*labelI); if(!isFinite(t)||t<=0) return;
         const lpx=x.getPixelForValue(labelI),lpy=y.getPixelForValue(t);
         if(lpx<ca.left||lpx>ca.right||lpy<ca.top||lpy>ca.bottom) return;
-        ctx.save(); ctx.font='bold 12px Arial'; const tw=ctx.measureText(nm).width;
+        ctx.save(); ctx.font='bold '+(window._tccPdfAnnotFontPx||12)+'px Arial'; const tw=ctx.measureText(nm).width;
         ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(lpx-tw-12,lpy-13,tw+8,16);
         ctx.fillStyle=col; ctx.textAlign='right'; ctx.fillText(nm,lpx-4,lpy); ctx.restore();
       });
