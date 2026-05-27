@@ -132,19 +132,30 @@ function setupHover(canvasEl) {
       const pts = ds.data.filter(p => p.x > 0 && p.y > 0);
       if (pts.length < 2) return;
 
-      // Log-log interpolate t at mouseI
+      // Log-log interpolate t at mouseI — check ALL segments (not just first)
+      // so lower/return bounds of custom curves are also tracked.
       for (let k = 0; k < pts.length - 1; k++) {
         const p1 = pts[k], p2 = pts[k + 1];
-        if (mouseI < p1.x || mouseI > p2.x) continue;
         if (p1.x <= 0 || p2.x <= 0 || p1.y <= 0 || p2.y <= 0) continue;
+
+        // Segment range (handle reversed x gracefully)
+        const xLo = Math.min(p1.x, p2.x), xHi = Math.max(p1.x, p2.x);
+        if (mouseI < xLo || mouseI > xHi) continue;
 
         const logI  = Math.log(mouseI);
         const logI1 = Math.log(p1.x), logI2 = Math.log(p2.x);
         const logT1 = Math.log(p1.y), logT2 = Math.log(p2.y);
-        const frac  = (logI - logI1) / (logI2 - logI1);
-        const logT  = logT1 + frac * (logT2 - logT1);
-        const tInterp = Math.exp(logT);
-        if (!isFinite(tInterp) || tInterp <= 0) break;
+        const dLogI = logI2 - logI1;
+
+        let tInterp;
+        if (Math.abs(dLogI) < 1e-10) {
+          // Near-vertical segment — snap to midpoint y
+          tInterp = Math.exp((logT1 + logT2) / 2);
+        } else {
+          const frac = (logI - logI1) / dLogI;
+          tInterp = Math.exp(logT1 + frac * (logT2 - logT1));
+        }
+        if (!isFinite(tInterp) || tInterp <= 0) continue;
 
         const px   = xScale.getPixelForValue(mouseI);
         const py   = yScale.getPixelForValue(tInterp);
@@ -156,7 +167,7 @@ function setupHover(canvasEl) {
           bestPy    = py;
           bestColor = typeof ds.borderColor === 'string' ? ds.borderColor : '#888';
         }
-        break;
+        // No break — continue checking remaining segments for this dataset
       }
     });
 
