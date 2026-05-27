@@ -279,12 +279,12 @@ export function render() {
       ctx.beginPath(); ctx.strokeStyle=col; ctx.moveTo(px,ca.top); ctx.lineTo(px,ca.bottom); ctx.stroke();
     });
     ctx.setLineDash([]); ctx.restore();
-    entries.sort((a,b)=>a.px-b.px); ctx.font='bold 10px Arial'; const lvR=[];
+    entries.sort((a,b)=>a.px-b.px); ctx.font='bold 12px Arial'; const lvR=[];
     entries.forEach(e=>{ const w=ctx.measureText(e.lbl).width; let lv=0;
       while(lvR[lv]!==undefined&&e.px+5<lvR[lv]) lv++; e.level=lv; lvR[lv]=e.px+5+w+6;
     });
     ctx.save(); ctx.textAlign='left';
-    entries.forEach(({px,lbl,col,level})=>{ ctx.fillStyle=col; ctx.fillText(lbl,px+5,ca.top+14+level*14); });
+    entries.forEach(({px,lbl,col,level})=>{ ctx.fillStyle=col; ctx.fillText(lbl,px+5,ca.top+16+level*16); });
     ctx.restore();
     if(window.tdcParentEn!==false){
       const k2=parseFloat((document.getElementById('tdc-k')||{}).value)||143;
@@ -298,8 +298,8 @@ export function render() {
         const t=Math.pow(k2*area/imax2,2); if(!isFinite(t)||t<=0) return;
         const lpx=x.getPixelForValue(imax2),lpy=y.getPixelForValue(t);
         if(lpx<ca.left||lpx>ca.right||lpy<ca.top||lpy>ca.bottom) return;
-        ctx.save(); ctx.font='bold 9px Arial'; const tw=ctx.measureText(nm).width;
-        ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(lpx-tw-10,lpy-10,tw+6,13);
+        ctx.save(); ctx.font='bold 12px Arial'; const tw=ctx.measureText(nm).width;
+        ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(lpx-tw-12,lpy-13,tw+8,16);
         ctx.fillStyle=col; ctx.textAlign='right'; ctx.fillText(nm,lpx-4,lpy); ctx.restore();
       });
       thermalTransformers.forEach((tx,i)=>{
@@ -312,8 +312,8 @@ export function render() {
         if(labelI<x.min) return; const t=K1/(labelI*labelI); if(!isFinite(t)||t<=0) return;
         const lpx=x.getPixelForValue(labelI),lpy=y.getPixelForValue(t);
         if(lpx<ca.left||lpx>ca.right||lpy<ca.top||lpy>ca.bottom) return;
-        ctx.save(); ctx.font='bold 9px Arial'; const tw=ctx.measureText(nm).width;
-        ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(lpx-tw-10,lpy-10,tw+6,13);
+        ctx.save(); ctx.font='bold 12px Arial'; const tw=ctx.measureText(nm).width;
+        ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.fillRect(lpx-tw-12,lpy-13,tw+8,16);
         ctx.fillStyle=col; ctx.textAlign='right'; ctx.fillText(nm,lpx-4,lpy); ctx.restore();
       });
     }
@@ -331,14 +331,14 @@ export function render() {
       }}}},
       scales:{
         x:{ type:'logarithmic', min:zoomState.xMin, max:zoomState.xMax,
-          title:{display:true,text:xLabel,color:'#333',font:{size:12}},
+          title:{display:true,text:xLabel,color:'#333',font:{size:14}},
           afterBuildTicks:ax=>{const mn=zoomState.xMin,mx=zoomState.xMax;ax.ticks=xTicks().filter(t=>t.value>=mn*0.95&&t.value<=mx*1.05);},
-          ticks:{color:'#444',maxRotation:0,callback(v){let m=null;for(const lv of X_LABEL){if(Math.abs(v/lv-1)<0.01){m=lv;break;}}if(!m)return '';return xUnit==='A'?(m>=1000?(m/1000)+'k':String(m)):fmtKA(m);}},
+          ticks:{color:'#444',font:{size:12},maxRotation:0,callback(v){let m=null;for(const lv of X_LABEL){if(Math.abs(v/lv-1)<0.01){m=lv;break;}}if(!m)return '';return xUnit==='A'?(m>=1000?(m/1000)+'k':String(m)):fmtKA(m);}},
           grid:{display:false}},
         y:{ type:'logarithmic', min:zoomState.yMin, max:zoomState.yMax,
-          title:{display:true,text:'Trip time (s)',color:'#333',font:{size:12}},
+          title:{display:true,text:'Trip time (s)',color:'#333',font:{size:14}},
           afterBuildTicks:ax=>{const mn=zoomState.yMin,mx=zoomState.yMax;ax.ticks=yTicks().filter(t=>t.value>=mn*0.9&&t.value<=mx*1.1);},
-          ticks:{color:'#444',autoSkip:false,callback(v){for(const lv of Y_LABEL){if(Math.abs(v/lv-1)<0.01)return String(lv);}return '';}},
+          ticks:{color:'#444',font:{size:12},autoSkip:false,callback(v){for(const lv of Y_LABEL){if(Math.abs(v/lv-1)<0.01)return String(lv);}return '';}},
           grid:{display:false}}
       }
     }
