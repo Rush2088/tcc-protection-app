@@ -1,4 +1,4 @@
-// PNG export — title at top, chart in middle, 2-col legend at bottom
+// PNG export — title centred at top, chart in middle, 2-col legend at bottom
 export function exportPNG() {
   const chartCanvas = document.getElementById('tcc');
   const bv   = (document.getElementById('baseV')   || {}).value || '33';
@@ -25,7 +25,7 @@ export function exportPNG() {
   const H       = chartCanvas.height;
   const PAD     = 16;
   const TITLE_H = 36;
-  const ROW_H   = 22;
+  const ROW_H   = 24;
   const half    = Math.ceil(items.length / 2);
   const legRows = items.length ? half : 0;
   const LEG_H   = legRows ? legRows * ROW_H + 14 : 0;
@@ -39,11 +39,11 @@ export function exportPNG() {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, out.height);
 
-  // Title at top
+  // Title centred at top
   ctx.fillStyle = '#1a3a5c';
-  ctx.font = 'bold 15px Arial, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(proj, PAD, 22);
+  ctx.font = 'bold 16px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(proj, W / 2, 22);
 
   // Divider below title
   ctx.strokeStyle = '#c8d2dc';
@@ -83,21 +83,22 @@ export function exportPNG() {
         ctx.lineWidth   = 2.5;
         ctx.beginPath();
         ctx.moveTo(xBase, iy);
-        ctx.lineTo(xBase + 24, iy);
+        ctx.lineTo(xBase + 28, iy);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Name (bold) + settings (grey) on the same baseline
+        // Name bold 13px
         ctx.textAlign = 'left';
-        ctx.font = 'bold 12px Arial, sans-serif';
+        ctx.font = 'bold 13px Arial, sans-serif';
         ctx.fillStyle = '#282828';
-        ctx.fillText(item.label, xBase + 30, iy + 4);
+        ctx.fillText(item.label, xBase + 34, iy + 4);
 
+        // Settings normal 13px — same size as name
         if (item.settings) {
           const nameW = ctx.measureText(item.label + '  ').width;
-          ctx.font      = '11px Arial, sans-serif';
+          ctx.font      = '13px Arial, sans-serif';
           ctx.fillStyle = '#666666';
-          ctx.fillText(item.settings, xBase + 30 + nameW, iy + 4);
+          ctx.fillText(item.settings, xBase + 34 + nameW, iy + 4);
         }
       });
     }
