@@ -199,10 +199,10 @@
   #chart-title-text { font-size:13px; font-weight:600; color:#1a3a5c; }
 
   /* ── Device modal ────────────────────────────── */
-  #device-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.45); z-index:1500; align-items:flex-start; justify-content:center; padding-top:60px; }
-  #device-modal.open { display:flex; }
-  .dev-dialog { background:#fff; border:1px solid #aaa; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.3); width:380px; overflow:hidden; }
-  .dev-dlg-hdr { background:#1a3a5c; color:#fff; padding:8px 12px; font-size:13px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+  #device-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1500; pointer-events:none; }
+  #device-modal.open { display:block; }
+  .dev-dialog { background:#fff; border:1px solid #aaa; border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.3); width:380px; overflow:hidden; position:fixed; top:60px; left:calc(50% - 190px); pointer-events:all; }
+  .dev-dlg-hdr { background:#1a3a5c; color:#fff; padding:8px 12px; font-size:13px; font-weight:600; display:flex; justify-content:space-between; align-items:center; cursor:move; user-select:none; }
   .dev-dlg-hdr .close { cursor:pointer; font-size:16px; opacity:0.8; }
   .dev-dlg-hdr .close:hover { opacity:1; }
   .dev-list { max-height:260px; overflow-y:auto; padding:4px 0; }
@@ -819,9 +819,27 @@
     window.openDeviceModal();
   };
 
-  document.getElementById('device-modal').addEventListener('click', function(e) {
-    if (e.target === this) window.closeDeviceModal();
-  });
+  // Draggable modal
+  (function() {
+    const dlg = document.querySelector('.dev-dialog');
+    const hdr = dlg.querySelector('.dev-dlg-hdr');
+    let drag = false, ox = 0, oy = 0;
+    hdr.addEventListener('mousedown', function(e) {
+      if (e.target.classList.contains('close')) return;
+      drag = true;
+      ox = e.clientX - dlg.offsetLeft;
+      oy = e.clientY - dlg.offsetTop;
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (!drag) return;
+      const maxX = window.innerWidth  - dlg.offsetWidth;
+      const maxY = window.innerHeight - dlg.offsetHeight;
+      dlg.style.left = Math.min(maxX, Math.max(0, e.clientX - ox)) + 'px';
+      dlg.style.top  = Math.min(maxY, Math.max(0, e.clientY - oy)) + 'px';
+    });
+    document.addEventListener('mouseup', function() { drag = false; });
+  })();
 
   window.addEventListener('resize', render);
   renderRelaySidebar();
