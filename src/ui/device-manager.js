@@ -13,7 +13,11 @@ const sChk = (id, v) => { const e = gEl(id); if (e) e.checked = !!v; };
 function captureSnapshot(name) {
   return {
     name: name || (_devices[_activeIdx] && _devices[_activeIdx].name) || 'Device 1',
-    baseV: gVal('baseV') || '0.415',
+    baseV:    gVal('baseV') || '0.415',
+    xUnit:    gVal('xUnit') || 'kA',
+    showFull: gChk('showFull'),
+    xMin:     window.zoomState ? window.zoomState.xMin : 10,
+    xMax:     window.zoomState ? window.zoomState.xMax : 50000,
     relays: relays.map(r => ({
       name: r.name, en: r.en,
       s1: Object.assign({}, r.s1),
@@ -44,7 +48,13 @@ function captureSnapshot(name) {
 }
 
 function restoreSnapshot(snap) {
-  sVal('baseV', snap.baseV != null ? snap.baseV : '0.415');
+  sVal('baseV',    snap.baseV    != null ? snap.baseV    : '0.415');
+  sVal('xUnit',    snap.xUnit    != null ? snap.xUnit    : 'kA');
+  sChk('showFull', snap.showFull != null ? snap.showFull : false);
+  if (window.zoomState) {
+    if (snap.xMin != null) window.zoomState.xMin = snap.xMin;
+    if (snap.xMax != null) window.zoomState.xMax = snap.xMax;
+  }
   (snap.relays || []).forEach((r, i) => {
     if (!relays[i]) return;
     relays[i].name = r.name != null ? r.name : relays[i].name;
@@ -95,7 +105,11 @@ function restoreSnapshot(snap) {
 function _defaultDevice(name) {
   return {
     name: name || 'Device 1',
-    baseV: '0.415',
+    baseV:    '0.415',
+    xUnit:    'kA',
+    showFull: false,
+    xMin:     10,
+    xMax:     50000,
     relays: [
       { name: 'Relay 1', en: true,  s1: { en: true,  ip: 2000,  tms: 0.8,  ct: 'EI' }, s2: { en: false, ip: 10,  tms: 0.85, ct: 'EI' }, dt: { en: true,  ip: 13000, td: 0.3  } },
       { name: 'Relay 2', en: false, s1: { en: true,  ip: 1000,  tms: 0.8,  ct: 'VI' }, s2: { en: false, ip: 10,  tms: 0.85, ct: 'EI' }, dt: { en: true,  ip: 6000,  td: 0.08 } }
