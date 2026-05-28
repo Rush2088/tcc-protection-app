@@ -123,17 +123,8 @@ function _syncDeviceUI() {
       '</option>'
     ).join('');
   }
-  _syncChartTitle();
 }
 
-function _syncChartTitle() {
-  const proj = gVal('projName') || '';
-  const dev  = (_devices[_activeIdx] && _devices[_activeIdx].name) || '';
-  const el   = gEl('chart-title-text');
-  if (!el) return;
-  if (proj && dev) el.textContent = proj + ' — ' + dev + ' TCC Plot';
-  else el.textContent = (proj || dev) + ' TCC Plot';
-}
 
 export function initDeviceManager() {
   _devices   = [captureSnapshot('Device 1')];

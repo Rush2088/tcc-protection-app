@@ -3,6 +3,7 @@ import { xTicks, yTicks, X_LABEL, Y_LABEL, fmtKA }  from './ticks.js';
 import { getRelays, getBaseV, getShowFull, getXUnit } from '../ui/inputs.js';
 import { getCustomDevices }                          from '../ui/custom-device.js';
 import { faultLevels, thermalCables, thermalTransformers } from '../state.js';
+import { getTitle }                                  from '../ui/device-manager.js';
 
 const FL_COLORS = ['#6c3d91','#2e7d32','#00838f','#f57c00','#37474f','#ad1457'];
 const CT_LBL    = { EI: 'IEC EI', VI: 'IEC VI', SI: 'IEC SI', LTI: 'IEC LTI' };
@@ -215,7 +216,7 @@ export function render() {
   const relays=getRelays(), baseV=getBaseV(), showFull=getShowFull(), xUnit=getXUnit();
   const xLabel='Current ('+xUnit+') @ '+baseV+'kV', lbl='Pickup I ('+baseV+'kV, A)';
   const titleEl=document.getElementById('chart-title');
-  if (titleEl) { titleEl.textContent=(document.getElementById('projName')||{}).value||'Protection Coordination'; }
+  if (titleEl) { titleEl.textContent=getTitle(); }
   [1,2].forEach(n => { ['s1','s2','dt'].forEach(s => { const el=document.getElementById('r'+n+'-'+s+'-lb'); if(el) el.textContent=lbl; }); });
   const datasets=[], cds=getCustomDevices();
 
