@@ -114,9 +114,16 @@ function _defaultDevice(name) {
   };
 }
 
-function _syncDeviceBtn() {
-  const btn = gEl('deviceBtn');
-  if (btn) btn.textContent = (_devices[_activeIdx] && _devices[_activeIdx].name) || 'Device 1';
+function _syncDeviceUI() {
+  const sel = gEl('deviceSelect');
+  if (sel) {
+    sel.innerHTML = _devices.map((d, i) =>
+      '<option value="' + i + '"' + (i === _activeIdx ? ' selected' : '') + '>' +
+      d.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') +
+      '</option>'
+    ).join('');
+  }
+  _syncChartTitle();
 }
 
 function _syncChartTitle() {
@@ -131,8 +138,7 @@ function _syncChartTitle() {
 export function initDeviceManager() {
   _devices   = [captureSnapshot('Device 1')];
   _activeIdx = 0;
-  _syncDeviceBtn();
-  _syncChartTitle();
+  _syncDeviceUI();
 }
 
 export function getTitle() {
@@ -157,8 +163,7 @@ export function switchDevice(idx) {
   saveCurrentDevice();
   _activeIdx = idx;
   restoreSnapshot(_devices[idx]);
-  _syncDeviceBtn();
-  _syncChartTitle();
+  _syncDeviceUI();
 }
 
 export function addDevice(name) {
@@ -167,8 +172,40 @@ export function addDevice(name) {
   _devices.push(_defaultDevice(trimmed));
   _activeIdx = _devices.length - 1;
   restoreSnapshot(_devices[_activeIdx]);
-  _syncDeviceBtn();
-  _syncChartTitle();
+  _syncDeviceUI();
+}
+
+export function renameDevice(idx, newName) {
+  const trimmed = (newName || '').trim();
+  if (!trimmed || idx < 0 || idx >= _devices.length) return;
+  if (idx === _activeIdx) saveCurrentDevice();
+  _devices[idx].name = trimmed;
+  _syncDeviceUI();
+}
+
+export function cloneDevice(idx) {
+  if (idx < 0 || idx >= _devices.length) return;
+  saveCurrentDevice();
+  const clone = JSON.parse(JSON.stringify(_devices[idx]));
+  clone.name = clone.name + ' (copy)';
+  _devices.push(clone);
+  _activeIdx = _devices.length - 1;
+  restoreSnapshot(_devices[_activeIdx]);
+  _syncDeviceUI();
+}
+
+export function copyToDevice(fromIdx, toIdx, parts) {
+  if (fromIdx === toIdx || fromIdx < 0 || fromIdx >= _devices.length) return;
+  if (toIdx < 0 || toIdx >= _devices.length) return;
+  saveCurrentDevice();
+  const src = _devices[fromIdx];
+  const dst = _devices[toIdx];
+  if (parts.relays)          dst.relays          = JSON.parse(JSON.stringify(src.relays));
+  if (parts.customDevices)   dst.customDevices   = JSON.parse(JSON.stringify(src.customDevices));
+  if (parts.faultLevels)     dst.faultLevels     = JSON.parse(JSON.stringify(src.faultLevels));
+  if (parts.thermalCables)   dst.thermalCables   = JSON.parse(JSON.stringify(src.thermalCables));
+  if (parts.thermalSettings) dst.thermalSettings = JSON.parse(JSON.stringify(src.thermalSettings));
+  if (toIdx === _activeIdx)  restoreSnapshot(_devices[_activeIdx]);
 }
 
 export function deleteDevice(idx) {
@@ -176,8 +213,7 @@ export function deleteDevice(idx) {
   _devices.splice(idx, 1);
   if (_activeIdx >= _devices.length) _activeIdx = _devices.length - 1;
   restoreSnapshot(_devices[_activeIdx]);
-  _syncDeviceBtn();
-  _syncChartTitle();
+  _syncDeviceUI();
 }
 
 export function onProjectNameChange() { _syncChartTitle(); }
@@ -188,8 +224,7 @@ export function loadDevicesFromSession(data) {
   if (!_devices.length) _devices = [_defaultDevice()];
   _activeIdx = Math.min(data.activeDevice || 0, _devices.length - 1);
   restoreSnapshot(_devices[_activeIdx]);
-  _syncDeviceBtn();
-  _syncChartTitle();
+  _syncDeviceUI();
 }
 
 export function getSessionData() {
