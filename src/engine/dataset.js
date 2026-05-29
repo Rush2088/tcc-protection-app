@@ -14,18 +14,33 @@ function makeCurve(ip, tms, ct, lo, hi) {
     .filter(Boolean);
 }
 
+/** Like makeCurve but applies MoP saturation: curve up to mop×ip, then flat horizontal to hi. */
+function makeCurveWithMoP(ip, tms, ct, lo, hi, mop) {
+  const capI = (mop > 0) ? mop * ip : Infinity;
+  const effHi = Math.min(hi, capI);
+  const pts = makeCurve(ip, tms, ct, lo, effHi);
+  if (mop > 0 && capI < hi && capI > lo) {
+    const tSat = iecT(capI, ip, tms, ct);
+    if (tSat !== null && tSat > 0) {
+      pts.push({ x: capI, y: tSat });
+      pts.push({ x: hi,   y: tSat });
+    }
+  }
+  return pts;
+}
+
 /**
  * Returns { s1Full, s2Full, s1Eff, s2Eff, dtD }
  * Full = complete curve (faded reference)
  * Eff  = effective zone (solid, directional-crossover-aware)
  * dtD  = DT step line points
  */
-export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw) {
+export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw, mop1=0, mop2=0) {
   const td   = Math.max(+td_raw || 0, 0.02);
   const ipLim = en3 ? ip3 : X_MAX;
 
-  const s1Full = en1 ? makeCurve(ip1, tms1, ct1, ip1, X_MAX) : [];
-  const s2Full = en2 ? makeCurve(ip2, tms2, ct2, ip2, X_MAX) : [];
+  const s1Full = en1 ? makeCurveWithMoP(ip1, tms1, ct1, ip1, X_MAX, mop1) : [];
+  const s2Full = en2 ? makeCurveWithMoP(ip2, tms2, ct2, ip2, X_MAX, mop2) : [];
 
   let s1Eff, s2Eff;
   if (en1 && en2) {
@@ -33,19 +48,19 @@ export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw
     if (cross !== null) {
       const { cx, s1FasterBefore } = cross;
       if (s1FasterBefore) {
-        s1Eff = makeCurve(ip1, tms1, ct1, ip1, cx);
-        s2Eff = makeCurve(ip2, tms2, ct2, cx, ipLim);
+        s1Eff = makeCurveWithMoP(ip1, tms1, ct1, ip1, cx,     mop1);
+        s2Eff = makeCurveWithMoP(ip2, tms2, ct2, cx,  ipLim,  mop2);
       } else {
-        s1Eff = makeCurve(ip1, tms1, ct1, cx, ipLim);
-        s2Eff = makeCurve(ip2, tms2, ct2, ip2, cx);
+        s1Eff = makeCurveWithMoP(ip1, tms1, ct1, cx,  ipLim,  mop1);
+        s2Eff = makeCurveWithMoP(ip2, tms2, ct2, ip2, cx,     mop2);
       }
     } else {
-      s1Eff = makeCurve(ip1, tms1, ct1, ip1, ipLim);
-      s2Eff = makeCurve(ip2, tms2, ct2, ip2, ipLim);
+      s1Eff = makeCurveWithMoP(ip1, tms1, ct1, ip1, ipLim, mop1);
+      s2Eff = makeCurveWithMoP(ip2, tms2, ct2, ip2, ipLim, mop2);
     }
   } else {
-    s1Eff = en1 ? makeCurve(ip1, tms1, ct1, ip1, ipLim) : [];
-    s2Eff = en2 ? makeCurve(ip2, tms2, ct2, ip2, ipLim) : [];
+    s1Eff = en1 ? makeCurveWithMoP(ip1, tms1, ct1, ip1, ipLim, mop1) : [];
+    s2Eff = en2 ? makeCurveWithMoP(ip2, tms2, ct2, ip2, ipLim, mop2) : [];
   }
 
   const dtD = [];
@@ -73,7 +88,18 @@ export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw
  * @param {number} I_A  fault current in Amperes
  * @param {object} v    relay settings from getV()
  */
+/** Apply MoP saturation: if I_A is at or beyond mop×ip, return the saturated time. */
+function applyMoP(t, I_A, ip, tms, ct, mop) {
+  if (!mop || mop <= 0 || t === null) return t;
+  const mopI = mop * ip;
+  if (I_A < mopI) return t;
+  return iecT(mopI, ip, tms, ct) ?? t;
+}
+
 export function operateTime(I_A, v) {
+  const mop1 = v.mop1 || 0;
+  const mop2 = v.mop2 || 0;
+
   // Rule 1 — DT stage: if enabled and I_A ≥ ip3, DT is the effective stage
   if (v.en3 && I_A >= v.ip3) {
     return Math.max(v.td, 0.02);
@@ -88,26 +114,23 @@ export function operateTime(I_A, v) {
     if (cross !== null) {
       const { cx, s1FasterBefore } = cross;
       if (s1FasterBefore) {
-        // S1 effective from ip1 → cx, S2 effective from cx → ipLim
-        if (I_A > v.ip1 * 1.001 && I_A <= cx) return iecT(I_A, v.ip1, v.tms1, v.ct1);
-        if (I_A > cx && I_A > v.ip2 * 1.001)  return iecT(I_A, v.ip2, v.tms2, v.ct2);
+        if (I_A > v.ip1 * 1.001 && I_A <= cx) return applyMoP(iecT(I_A, v.ip1, v.tms1, v.ct1), I_A, v.ip1, v.tms1, v.ct1, mop1);
+        if (I_A > cx && I_A > v.ip2 * 1.001)  return applyMoP(iecT(I_A, v.ip2, v.tms2, v.ct2), I_A, v.ip2, v.tms2, v.ct2, mop2);
       } else {
-        // S2 effective from ip2 → cx, S1 effective from cx → ipLim
-        if (I_A > v.ip2 * 1.001 && I_A <= cx) return iecT(I_A, v.ip2, v.tms2, v.ct2);
-        if (I_A > cx && I_A > v.ip1 * 1.001)  return iecT(I_A, v.ip1, v.tms1, v.ct1);
+        if (I_A > v.ip2 * 1.001 && I_A <= cx) return applyMoP(iecT(I_A, v.ip2, v.tms2, v.ct2), I_A, v.ip2, v.tms2, v.ct2, mop2);
+        if (I_A > cx && I_A > v.ip1 * 1.001)  return applyMoP(iecT(I_A, v.ip1, v.tms1, v.ct1), I_A, v.ip1, v.tms1, v.ct1, mop1);
       }
-      return null; // current falls in a gap (between pickups, not in either effective zone)
+      return null;
     } else {
-      // No crossover — both stages fully effective across their ranges → minimum
-      const t1 = (I_A > v.ip1 * 1.001) ? iecT(I_A, v.ip1, v.tms1, v.ct1) : null;
-      const t2 = (I_A > v.ip2 * 1.001) ? iecT(I_A, v.ip2, v.tms2, v.ct2) : null;
+      const t1 = (I_A > v.ip1 * 1.001) ? applyMoP(iecT(I_A, v.ip1, v.tms1, v.ct1), I_A, v.ip1, v.tms1, v.ct1, mop1) : null;
+      const t2 = (I_A > v.ip2 * 1.001) ? applyMoP(iecT(I_A, v.ip2, v.tms2, v.ct2), I_A, v.ip2, v.tms2, v.ct2, mop2) : null;
       const times = [t1, t2].filter(t => t !== null);
       return times.length ? Math.min(...times) : null;
     }
   } else if (v.en1) {
-    return (I_A > v.ip1 * 1.001) ? iecT(I_A, v.ip1, v.tms1, v.ct1) : null;
+    return (I_A > v.ip1 * 1.001) ? applyMoP(iecT(I_A, v.ip1, v.tms1, v.ct1), I_A, v.ip1, v.tms1, v.ct1, mop1) : null;
   } else if (v.en2) {
-    return (I_A > v.ip2 * 1.001) ? iecT(I_A, v.ip2, v.tms2, v.ct2) : null;
+    return (I_A > v.ip2 * 1.001) ? applyMoP(iecT(I_A, v.ip2, v.tms2, v.ct2), I_A, v.ip2, v.tms2, v.ct2, mop2) : null;
   }
   return null;
 }

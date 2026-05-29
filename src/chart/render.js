@@ -222,7 +222,7 @@ export function render() {
 
   relays.forEach(relay => {
     if (!relay.en) return;
-    const {s1,s2,dt}=relay, res=build(s1.en,s2.en,dt.en,s1.ip,s2.ip,dt.ip,s1.tms,s2.tms,s1.ct,s2.ct,dt.td);
+    const {s1,s2,dt}=relay, res=build(s1.en,s2.en,dt.en,s1.ip,s2.ip,dt.ip,s1.tms,s2.tms,s1.ct,s2.ct,dt.td,s1.mop||0,s2.mop||0);
     const col=relay.color, fade=hexToRgba(col,0.18);
     if (showFull) {
       if(s1.en) datasets.push({data:res.s1Full,borderColor:fade,borderWidth:1.5,borderDash:[6,4],pointRadius:0,showLine:true,tension:0});

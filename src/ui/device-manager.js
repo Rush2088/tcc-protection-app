@@ -111,8 +111,8 @@ function _defaultDevice(name) {
     xMin:     10,
     xMax:     50000,
     relays: [
-      { name: 'Relay 1', en: true,  s1: { en: true,  ip: 2000,  tms: 0.8,  ct: 'EI' }, s2: { en: false, ip: 10,  tms: 0.85, ct: 'EI' }, dt: { en: true,  ip: 13000, td: 0.3  } },
-      { name: 'Relay 2', en: false, s1: { en: true,  ip: 1000,  tms: 0.8,  ct: 'VI' }, s2: { en: false, ip: 10,  tms: 0.85, ct: 'EI' }, dt: { en: true,  ip: 6000,  td: 0.08 } }
+      { name: 'Relay 1', en: true,  s1: { en: true,  ip: 2000,  tms: 0.8,  ct: 'EI', mop: 0 }, s2: { en: false, ip: 10,  tms: 0.85, ct: 'EI', mop: 0 }, dt: { en: true,  ip: 13000, td: 0.3  } },
+      { name: 'Relay 2', en: false, s1: { en: true,  ip: 1000,  tms: 0.8,  ct: 'VI', mop: 0 }, s2: { en: false, ip: 10,  tms: 0.85, ct: 'EI', mop: 0 }, dt: { en: true,  ip: 6000,  td: 0.08 } }
     ],
     customDevices: [
       { name: 'Custom 1', en: false, color: '#27ae60', points: [], deviceType: '', settings: '' },

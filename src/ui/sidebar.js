@@ -1,6 +1,14 @@
 // sidebar.js - Builds relay and custom-device cards from state arrays.
 import { relays, customDevices } from '../state.js';
 
+/** Update the kA label next to the MoP input field after ip or mop changes. */
+window._updMoPKA = function(i, stg) {
+  const r = relays[i]; if (!r || !r[stg]) return;
+  const mop = r[stg].mop || 0, ip = r[stg].ip || 0;
+  const el  = document.getElementById('r' + (i + 1) + '-' + stg + '-mopka');
+  if (el) el.textContent = (mop > 0 && ip > 0) ? '= ' + (mop * ip / 1000).toFixed(3) + ' kA' : '';
+};
+
 const CURVES = ['EI','VI','SI','LTI'];
 const CT_LBL = {EI:'IEC EI',VI:'IEC VI',SI:'IEC SI',LTI:'IEC LTI'};
 
@@ -10,6 +18,11 @@ function esc(s) {
 
 function curveOpts(sel) {
   return CURVES.map(v => `<option value="${v}"${v===sel?' selected':''}>${CT_LBL[v]}</option>`).join('');
+}
+
+function mopKAStr(mop, ip) {
+  if (!mop || mop <= 0 || !ip || ip <= 0) return '';
+  return '= ' + (mop * ip / 1000).toFixed(3) + ' kA';
 }
 
 function buildStage(label, n, stg, en, cfg) {
@@ -32,6 +45,8 @@ function buildStage(label, n, stg, en, cfg) {
   }
   const stgLabel = stg === 's1' ? 'Stage 1 - IDMT' : 'Stage 2 - IDMT';
   const step = stg === 's1' ? '1' : '0.1';
+  const mopVal = cfg.mop || 0;
+  const mopStr = mopKAStr(mopVal, cfg.ip);
   return `
     <div class="stg-hdr"><span>${stgLabel}</span>
       <input type="checkbox" id="r${n}-${stg}-en"${chk}
@@ -39,7 +54,7 @@ function buildStage(label, n, stg, en, cfg) {
     <div class="stg-body${vis}" id="r${n}-${stg}-body">
       <div class="row"><label id="r${n}-${stg}-lb">Pickup I (A)</label>
         <input type="number" id="r${n}-${stg}-ip" value="${cfg.ip}" step="${step}"
-          oninput="window._stg(${i},'${stg}','ip',+this.value||0)"></div>
+          oninput="window._stg(${i},'${stg}','ip',+this.value||0);window._updMoPKA(${i},'${stg}')"></div>
       <div class="row"><label>TMS</label>
         <input type="number" id="r${n}-${stg}-tms" value="${cfg.tms}" step="0.05"
           oninput="window._stg(${i},'${stg}','tms',+this.value||0)"></div>
@@ -47,6 +62,10 @@ function buildStage(label, n, stg, en, cfg) {
         <select id="r${n}-${stg}-ct" onchange="window._stg(${i},'${stg}','ct',this.value)">
           ${curveOpts(cfg.ct)}
         </select></div>
+      <div class="row mop-row"><label>IDMT Range (×Ip)</label>
+        <input type="number" id="r${n}-${stg}-mop" value="${mopVal||''}" step="1" min="0" placeholder="∞"
+          oninput="window._stg(${i},'${stg}','mop',+this.value||0);window._updMoPKA(${i},'${stg}')">
+        <span class="mop-ka" id="r${n}-${stg}-mopka">${mopStr}</span></div>
     </div>`;
 }
 

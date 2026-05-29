@@ -124,8 +124,16 @@ function cdEffectivePts(points) {
 
 function relaySettingsStr(relay) {
   const parts = [];
-  if (relay.s1.en) parts.push('S1: ' + relay.s1.ip + 'A ' + relay.s1.ct + ' TMS=' + relay.s1.tms);
-  if (relay.s2.en) parts.push('S2: ' + relay.s2.ip + 'A ' + relay.s2.ct + ' TMS=' + relay.s2.tms);
+  if (relay.s1.en) {
+    let s = 'S1: ' + relay.s1.ip + 'A ' + relay.s1.ct + ' TMS=' + relay.s1.tms;
+    if (relay.s1.mop > 0) s += ' MoP=' + relay.s1.mop + 'x';
+    parts.push(s);
+  }
+  if (relay.s2.en) {
+    let s = 'S2: ' + relay.s2.ip + 'A ' + relay.s2.ct + ' TMS=' + relay.s2.tms;
+    if (relay.s2.mop > 0) s += ' MoP=' + relay.s2.mop + 'x';
+    parts.push(s);
+  }
   if (relay.dt.en) parts.push('DT: ' + relay.dt.ip + 'A ' + relay.dt.td + 's');
   return parts.join('  |  ');
 }
@@ -178,7 +186,8 @@ export function exportXLSX() {
           en1: r.s1.en, en2: r.s2.en, en3: r.dt.en,
           ip1: r.s1.ip, ip2: r.s2.ip, ip3: r.dt.ip,
           tms1: r.s1.tms, tms2: r.s2.tms,
-          ct1: r.s1.ct,  ct2: r.s2.ct,  td: r.dt.td
+          ct1: r.s1.ct,  ct2: r.s2.ct,  td: r.dt.td,
+          mop1: r.s1.mop || 0, mop2: r.s2.mop || 0
         };
         return operateTime(I, v);
       }
