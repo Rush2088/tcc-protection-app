@@ -65,8 +65,8 @@ export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw
 
   const dtD = [];
   if (en3) {
-    const t1p  = en1 ? iecT(ip3, ip1, tms1, ct1) : null;
-    const t2p  = en2 ? iecT(ip3, ip2, tms2, ct2) : null;
+    const t1p  = en1 ? applyMoP(iecT(ip3, ip1, tms1, ct1), ip3, ip1, tms1, ct1, mop1) : null;
+    const t2p  = en2 ? applyMoP(iecT(ip3, ip2, tms2, ct2), ip3, ip2, tms2, ct2, mop2) : null;
     const tops = [t1p, t2p].filter(v => v !== null);
     const topY = tops.length ? Math.min(...tops) : 10;
     dtD.push({ x: ip3, y: topY }, { x: ip3, y: td });
