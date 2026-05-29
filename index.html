@@ -34,8 +34,9 @@
   .stg-hdr:first-of-type { border-top: none; margin-top: 2px; }
   .stg-body { padding-top: 3px; }
   .stg-body.hidden { display: none; }
-  .mop-row input[type=number] { max-width: 58px; flex: none; }
-  .mop-ka { font-size: 11px; color: #555; white-space: nowrap; }
+  .mop-row { flex-wrap: nowrap; }
+  .mop-row input[type=number] { flex: 1; min-width: 0; }
+  .mop-ka { font-size: 11px; color: #555; white-space: nowrap; flex-shrink: 0; }
   #chart-area { flex: 1; background: #fff; border-radius: 8px; border: 0.5px solid #ccc; display: flex; flex-direction: column; padding: 12px; min-width: 0; }
   /* legend CSS consolidated into #zoom-toolbar block above */
   .leg-item  { display: flex; align-items: center; gap: 5px; }

@@ -6,7 +6,7 @@ window._updMoPKA = function(i, stg) {
   const r = relays[i]; if (!r || !r[stg]) return;
   const mop = r[stg].mop || 0, ip = r[stg].ip || 0;
   const el  = document.getElementById('r' + (i + 1) + '-' + stg + '-mopka');
-  if (el) el.textContent = (mop > 0 && ip > 0) ? '= ' + (mop * ip / 1000).toFixed(3) + ' kA' : '';
+  if (el) el.textContent = (mop > 0 && ip > 0) ? '= ' + (mop * ip / 1000).toFixed(1) + ' kA' : '';
 };
 
 const CURVES = ['EI','VI','SI','LTI'];
@@ -22,7 +22,7 @@ function curveOpts(sel) {
 
 function mopKAStr(mop, ip) {
   if (!mop || mop <= 0 || !ip || ip <= 0) return '';
-  return '= ' + (mop * ip / 1000).toFixed(3) + ' kA';
+  return '= ' + (mop * ip / 1000).toFixed(1) + ' kA';
 }
 
 function buildStage(label, n, stg, en, cfg) {
