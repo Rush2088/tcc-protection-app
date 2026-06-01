@@ -36,8 +36,9 @@ function makeCurveWithMoP(ip, tms, ct, lo, hi, mop) {
  * dtD  = DT step line points
  */
 export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw, mop1=0, mop2=0) {
-  const td   = Math.max(+td_raw || 0, 0.02);
-  const ipLim = en3 ? ip3 : X_MAX;
+  const td     = Math.max(+td_raw || 0, 0);       // actual td — 0 is valid (instantaneous)
+  const tdPlot = Math.max(td, 0.0005);             // minimum y for log-scale chart rendering only
+  const ipLim  = en3 ? ip3 : X_MAX;
 
   const s1Full = en1 ? makeCurveWithMoP(ip1, tms1, ct1, ip1, X_MAX, mop1) : [];
   const s2Full = en2 ? makeCurveWithMoP(ip2, tms2, ct2, ip2, X_MAX, mop2) : [];
@@ -69,11 +70,11 @@ export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw
     const t2p  = en2 ? applyMoP(iecT(ip3, ip2, tms2, ct2), ip3, ip2, tms2, ct2, mop2) : null;
     const tops = [t1p, t2p].filter(v => v !== null);
     const topY = tops.length ? Math.min(...tops) : 10;
-    dtD.push({ x: ip3, y: topY }, { x: ip3, y: td });
+    dtD.push({ x: ip3, y: topY }, { x: ip3, y: tdPlot });
     let rx = X_MAX;
-    if (en1) { const c = findIdmtHitsVal(ip1, tms1, ct1, td, ip3, X_MAX); if (c) rx = Math.min(rx, c); }
-    if (en2) { const c = findIdmtHitsVal(ip2, tms2, ct2, td, ip3, X_MAX); if (c) rx = Math.min(rx, c); }
-    dtD.push({ x: rx, y: td });
+    if (en1) { const c = findIdmtHitsVal(ip1, tms1, ct1, tdPlot, ip3, X_MAX); if (c) rx = Math.min(rx, c); }
+    if (en2) { const c = findIdmtHitsVal(ip2, tms2, ct2, tdPlot, ip3, X_MAX); if (c) rx = Math.min(rx, c); }
+    dtD.push({ x: rx, y: tdPlot });
   }
 
   return { s1Full, s2Full, s1Eff, s2Eff, dtD };
@@ -102,7 +103,7 @@ export function operateTime(I_A, v) {
 
   // Rule 1 — DT stage: if enabled and I_A ≥ ip3, DT is the effective stage
   if (v.en3 && I_A >= v.ip3) {
-    return Math.max(v.td, 0.02);
+    return Math.max(v.td, 0);
   }
 
   // Rule 2 — IDMT stages (current is below DT pickup or DT is off)
