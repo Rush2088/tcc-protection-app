@@ -37,7 +37,7 @@ function makeCurveWithMoP(ip, tms, ct, lo, hi, mop) {
  */
 export function build(en1, en2, en3, ip1, ip2, ip3, tms1, tms2, ct1, ct2, td_raw, mop1=0, mop2=0) {
   const td     = Math.max(+td_raw || 0, 0);       // actual td — 0 is valid (instantaneous)
-  const tdPlot = Math.max(td, 0.0005);             // minimum y for log-scale chart rendering only
+  const tdPlot = Math.max(td, 0.005);              // 5 ms floor for log-scale chart rendering only
   const ipLim  = en3 ? ip3 : X_MAX;
 
   const s1Full = en1 ? makeCurveWithMoP(ip1, tms1, ct1, ip1, X_MAX, mop1) : [];
