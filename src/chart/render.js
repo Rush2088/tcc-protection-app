@@ -217,7 +217,7 @@ export function render() {
   const xLabel='Current ('+xUnit+') @ '+baseV+'kV', lbl='Pickup I ('+baseV+'kV, A)';
   const titleEl=document.getElementById('chart-title');
   if (titleEl) { titleEl.textContent=getTitle(); }
-  [1,2].forEach(n => { ['s1','s2','dt'].forEach(s => { const el=document.getElementById('r'+n+'-'+s+'-lb'); if(el) el.textContent=lbl; }); });
+  relays.forEach((_,i) => { ['s1','s2','dt'].forEach(s => { const el=document.getElementById('r'+(i+1)+'-'+s+'-lb'); if(el) el.textContent=lbl; }); });
   const datasets=[], cds=getCustomDevices();
 
   relays.forEach(relay => {

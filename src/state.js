@@ -1,5 +1,5 @@
 // Shared application state
-export const RELAY_COLORS = ['#1e6bb8', '#c0392b'];
+export const RELAY_COLORS = ['#1e6bb8', '#c0392b', '#e67e22'];
 
 export const relays = [
   {
@@ -10,7 +10,13 @@ export const relays = [
   },
   {
     name: 'Relay 2', en: false, color: '#c0392b',
-    s1: { en: true,  ip: 1000,  tms: 0.8,  ct: 'VI', mop: 30 },
+    s1: { en: false, ip: 1000,  tms: 0.8,  ct: 'VI', mop: 30 },
+    s2: { en: false, ip: 10,    tms: 0.85, ct: 'EI', mop: 30 },
+    dt: { en: true,  ip: 6000,  td:  0.08  }
+  },
+  {
+    name: 'Relay 3', en: false, color: '#e67e22',
+    s1: { en: false, ip: 1000,  tms: 0.8,  ct: 'VI', mop: 30 },
     s2: { en: false, ip: 10,    tms: 0.85, ct: 'EI', mop: 30 },
     dt: { en: true,  ip: 6000,  td:  0.08  }
   }
